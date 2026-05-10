@@ -56,16 +56,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { message, history } = req.body;
 
   if (!process.env.GEMINI_API_KEY) {
-    return res.status(500).json({ error: "GEMINI_API_KEY is not configured on Vercel" });
+    return res.status(500).json({ error: "Ключ GEMINI_API_KEY не настроен на Vercel. Пожалуйста, добавьте его в настройках проекта." });
   }
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Correct way to pass system instructions
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: SYSTEM_INSTRUCTION 
+    });
 
     const chat = model.startChat({
       history: history || [],
-      systemInstruction: SYSTEM_INSTRUCTION,
     });
 
     const result = await chat.sendMessage(message);
@@ -73,7 +76,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     return res.status(200).send(responseText);
   } catch (error: any) {
-    console.error("Vercel API Error:", error);
-    return res.status(500).json({ error: error.message || "Internal Server Error" });
+    console.error("Vercel API Error Detail:", error);
+    return res.status(500).json({ 
+      error: `Ошибка ИИ: ${error.message || "Неизвестная ошибка"}`,
+      details: error.stack 
+    });
   }
 }
