@@ -20,56 +20,8 @@ import {
   Loader2
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { GoogleGenAI } from "@google/genai";
 
 const WHATSAPP_LINK = "https://wa.me/79000000000";
-
-const SYSTEM_INSTRUCTION = `Ты — профессиональный заботливый ассистент велнес-студии «РЕСУРС» в Альметьевске. 
-Твоя цель: помочь клиенту выбрать подходящую процедуру, рассказать о методиках и мягко подвести к записи.
-
-О КОМПАНИИ:
-Название: Студия «РЕСУРС».
-Локация: Альметьевск, ул. Ленина, д. 100.
-Режим работы: 09:00 — 21:00 по предварительной записи.
-Парковка: Собственная, всегда свободна.
-
-МЕТОДИКИ:
-1. Живой Пар:
-- Мягкий ионизированный пар (не баня, не сауна).
-- Температура около 40-42°C.
-- Процедура в специальной капсуле.
-- Длительность 15–20 минут.
-- Эффект: ощелачивание, расслабление, восстановление, чувство легкости.
-2. Синусоида:
-- Аппаратная велнес-процедура для мягкого волнового воздействия на позвоночник.
-- Плавные волнообразные колебания.
-- Длительность ~15 минут.
-- Эффект: снятие мышечного напряжения, улучшение состояния спины и шеи.
-3. Массаж:
-- Классические и авторские техники.
-- Длительность от 60 минут.
-4. Комплекс (Пар + Синусоида):
-- Идеален для перезагрузки.
-- Занимает 30 минут активного времени (40 минут общего пребывания).
-
-ЦЕНЫ:
-- Пробный визит: от 1 500 руб.
-- Комплекс (Пар + Синусоида): 3 500 руб.
-- Абонементы (5 визитов): 12 500 руб.
-
-ВАЖНЫЕ ПРАВИЛА (SAFETY LAYER):
-- МЫ НЕ МЕДИЦИНСКАЯ ОРГАНИЗАЦИЯ. Мы не ставим диагнозы и не лечим.
-- Не делай медицинских обещаний. Вместо "вылечим грыжу" говори "поможет расслабить мышцы и снять напряжение".
-- При упоминании серьезных болей, температуры, беременности — ВСЕГДА советуй проконсультироваться с лечащим врачом перед визитом.
-- Мы wellness-студия телесного восстановления.
-
-ТОНАЛЬНОСТЬ:
-Заботливая, спокойная, уверенная, лаконичная. Обращайся на "вы" (вежливо).
-
-ДЕЙСТВИЕ ПРИ ЗАПИСИ:
-Если клиент готов записаться, сообщи, что запись ведется через WhatsApp и предоставь номер +7 (900) 000-00-00 или ссылку ${WHATSAPP_LINK}.`;
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // --- Components ---
 
@@ -150,27 +102,36 @@ export default function App() {
         parts: [{ text: msg.text }]
       }));
 
-      const chat = ai.chats.create({
-        model: "gemini-3-flash-preview",
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-        },
-        history: history
-      });
-
       let assistantMessageId = (Date.now() + 1).toString();
       setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', text: '' }]);
 
-      const result = await chat.sendMessageStream({ message: text });
-      let fullText = "";
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history })
+      });
 
-      for await (const chunk of result) {
-        const chunkText = chunk.text;
-        fullText += chunkText;
-        setMessages(prev => prev.map(msg => 
-          msg.id === assistantMessageId ? { ...msg, text: fullText } : msg
-        ));
+      if (!response.ok) {
+        let errorMessage = "Failed to fetch from API";
+        try {
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } else {
+            const errorText = await response.text();
+            errorMessage = `API Error (${response.status}): ${errorText.substring(0, 100)}`;
+          }
+        } catch (e) {
+          errorMessage = `API Error (${response.status})`;
+        }
+        throw new Error(errorMessage);
       }
+
+      const assistantText = await response.text();
+      setMessages(prev => prev.map(msg => 
+        msg.id === assistantMessageId ? { ...msg, text: assistantText } : msg
+      ));
     } catch (error) {
       console.error("AI Error:", error);
       setMessages(prev => [...prev, { 
@@ -208,6 +169,7 @@ export default function App() {
             <a href="#services" className="hover:text-studio-accent transition-colors">Услуги</a>
             <a href="#audience" className="hover:text-studio-accent transition-colors">Кому подходит</a>
             <a href="#process" className="hover:text-studio-accent transition-colors">Как проходит</a>
+            <a href="#reviews" className="hover:text-studio-accent transition-colors">Отзывы</a>
             <a href="#pricing" className="hover:text-studio-accent transition-colors">Цены</a>
             <a href="#faq" className="hover:text-studio-accent transition-colors">Вопросы</a>
             <a href="#contacts" className="hover:text-studio-accent transition-colors">Контакты</a>
@@ -232,6 +194,7 @@ export default function App() {
                 <a href="#services" onClick={() => setMobileMenuOpen(false)}>Услуги</a>
                 <a href="#audience" onClick={() => setMobileMenuOpen(false)}>Кому подходит</a>
                 <a href="#process" onClick={() => setMobileMenuOpen(false)}>Как проходит</a>
+                <a href="#reviews" onClick={() => setMobileMenuOpen(false)}>Отзывы</a>
                 <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Цены</a>
                 <a href="#faq" onClick={() => setMobileMenuOpen(false)}>Вопросы</a>
                 <a href="#contacts" onClick={() => setMobileMenuOpen(false)}>Контакты</a>
@@ -599,7 +562,56 @@ export default function App() {
         </div>
       </section>
 
-      {/* 20. Контакты */}
+      {/* 20. Отзывы */}
+      <section id="reviews" className="py-32 bg-white">
+        <div className="studio-container">
+          <SectionHeading badge="Отзывы" title="Что говорят наши гости" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { 
+                name: "Елена", 
+                role: "Офисный сотрудник", 
+                text: "После Синусоиды спина просто 'задышала'. Невероятное ощущение легкости, которое сохраняется несколько дней. Очень рекомендую тем, кто весь день проводит за компьютером.",
+                rating: 5
+              },
+              { 
+                name: "Александр", 
+                role: "Спортсмен", 
+                text: "Живой Пар — идеальное завершение тренировочной недели. Мышцы восстанавливаются гораздо быстрее, а сон после процедуры просто младенческий.",
+                rating: 5
+              },
+              { 
+                name: "Марина", 
+                role: "Мама двоих детей", 
+                text: "Мой личный час тишины и заботы. Студия 'РЕСУРС' стала для меня местом, где можно выключить телефон и просто почувствовать свое тело. Заботливый персонал — это отдельная любовь.",
+                rating: 5
+              }
+            ].map((review, i) => (
+              <div key={i} className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between">
+                <div>
+                   <div className="flex gap-1 mb-6">
+                     {[...Array(review.rating)].map((_, i) => (
+                       <Heart key={i} size={14} className="fill-studio-accent text-studio-accent" />
+                     ))}
+                   </div>
+                   <p className="text-studio-ink text-sm leading-relaxed italic mb-8">"{review.text}"</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-studio-accent/20 flex items-center justify-center text-studio-accent font-serif font-bold">
+                    {review.name[0]}
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold uppercase tracking-wider">{review.name}</div>
+                    <div className="text-[10px] text-studio-muted uppercase tracking-widest">{review.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 21. Контакты */}
       <section id="contacts" className="py-32 bg-studio-bg overflow-hidden border-t border-studio-line">
         <div className="studio-container">
           <div className="grid lg:grid-cols-2 gap-32">
