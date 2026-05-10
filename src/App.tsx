@@ -20,57 +20,8 @@ import {
   Loader2
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { GoogleGenAI } from "@google/genai";
 
 const WHATSAPP_LINK = "https://wa.me/79000000000";
-
-const SYSTEM_INSTRUCTION = `Ты — профессиональный заботливый ассистент велнес-студии «РЕСУРС» в Альметьевске. 
-Твоя цель: помочь клиенту выбрать подходящую процедуру, рассказать о методиках и мягко подвести к записи.
-
-О КОМПАНИИ:
-Название: Студия «РЕСУРС».
-Локация: Альметьевск, ул. Ленина, д. 100.
-Режим работы: 09:00 — 21:00 по предварительной записи.
-Парковка: Собственная, всегда свободна.
-
-МЕТОДИКИ:
-1. Живой Пар:
-- Мягкий ионизированный пар (не баня, не сауна).
-- Температура около 40-42°C.
-- Процедура в специальной капсуле.
-- Длительность 15–20 минут.
-- Эффект: ощелачивание, расслабление, восстановление, чувство легкости.
-2. Синусоида:
-- Аппаратная велнес-процедура для мягкого волнового воздействия на позвоночник.
-- Плавные волнообразные колебания.
-- Длительность ~15 минут.
-- Эффект: снятие мышечного напряжения, улучшение состояния спины и шеи.
-3. Массаж:
-- Классические и авторские техники.
-- Длительность от 60 минут.
-4. Комплекс (Пар + Синусоида):
-- Идеален для перезагрузки.
-- Занимает 30 минут активного времени (40 минут общего пребывания).
-
-ЦЕНЫ:
-- Пробный визит: от 1 500 руб.
-- Комплекс (Пар + Синусоида): 3 500 руб.
-- Абонементы (5 визитов): 12 500 руб.
-
-ВАЖНЫЕ ПРАВИЛА (SAFETY LAYER):
-- МЫ НЕ МЕДИЦИНСКАЯ ОРГАНИЗАЦИЯ. Мы не ставим диагнозы и не лечим.
-- Не делай медицинских обещаний. Вместо "вылечим грыжу" говори "поможет расслабить мышцы и снять напряжение".
-- При упоминании серьезных болей, температуры, беременности — ВСЕГДА советуй проконсультироваться с лечащим врачом перед визитом.
-- Мы wellness-студия телесного восстановления.
-
-ТОНАЛЬНОСТЬ:
-Заботливая, спокойная, уверенная, лаконичная. Обращайся на "вы" (вежливо).
-
-ДЕЙСТВИЕ ПРИ ЗАПИСИ:
-Если клиент готов записаться, сообщи, что запись ведется через WhatsApp и предоставь номер +7 (900) 000-00-00. Ссылка на WhatsApp: ${WHATSAPP_LINK}`;
-
-// Initialize Gemini API
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // --- Components ---
 
@@ -155,25 +106,18 @@ export default function App() {
     setIsTyping(true);
 
     try {
-      if (!process.env.GEMINI_API_KEY) {
-        throw new Error("АПИ-ключ не настроен. Если вы используете Vercel, добавьте GEMINI_API_KEY в переменные окружения.");
-      }
-
-      // Add the current message
-      const contents = [
-        ...history,
-        { role: 'user', parts: [{ text: text }] }
-      ];
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: contents,
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION
-        }
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history })
       });
 
-      const assistantText = response.text || '';
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Ошибка API");
+      }
+
+      const assistantText = await response.text();
       
       setMessages(prev => prev.map(msg => 
         msg.id === assistantId ? { ...msg, text: assistantText } : msg
