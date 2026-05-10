@@ -69,6 +69,7 @@ const SYSTEM_INSTRUCTION = `Ты — профессиональный забот
 ДЕЙСТВИЕ ПРИ ЗАПИСИ:
 Если клиент готов записаться, сообщи, что запись ведется через WhatsApp и предоставь номер +7 (900) 000-00-00. Ссылка на WhatsApp: ${WHATSAPP_LINK}`;
 
+// Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // --- Components ---
@@ -142,7 +143,7 @@ export default function App() {
     const userMessage = { id: Date.now().toString(), role: 'user', text };
     const assistantId = (Date.now() + 1).toString();
     
-    const chatHistory = messages
+    const history = messages
       .filter((msg, index) => !(index === 0 && msg.role === 'assistant'))
       .map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
@@ -155,24 +156,24 @@ export default function App() {
 
     try {
       if (!process.env.GEMINI_API_KEY) {
-        throw new Error("GEMINI_API_KEY is not configured");
+        throw new Error("АПИ-ключ не настроен. Если вы используете Vercel, добавьте GEMINI_API_KEY в переменные окружения.");
       }
 
-      // Add the current user message to the local history for the model call
-      const combinedHistory = [
-        ...chatHistory,
+      // Add the current message
+      const contents = [
+        ...history,
         { role: 'user', parts: [{ text: text }] }
       ];
 
-      const result = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: combinedHistory,
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: contents,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION
         }
       });
 
-      const assistantText = result.text || '';
+      const assistantText = response.text || '';
       
       setMessages(prev => prev.map(msg => 
         msg.id === assistantId ? { ...msg, text: assistantText } : msg
@@ -181,7 +182,7 @@ export default function App() {
       console.error("AI Error:", error);
       setMessages(prev => prev.map(msg => 
         msg.id === assistantId 
-          ? { ...msg, text: `К сожалению, произошла ошибка в работе ассистента: ${error.message}. Пожалуйста, напишите нам напрямую в WhatsApp.` } 
+          ? { ...msg, text: `К сожалению, произошла ошибка: ${error.message}. Пожалуйста, попробуйте позже или напишите нам напрямую в WhatsApp.` } 
           : msg
       ));
     } finally {

@@ -12,7 +12,7 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Removed AI logic from server as it's now handled on the frontend
+  // AI logic is now handled in App.tsx using @google/genai SDK on the client side.
   
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
