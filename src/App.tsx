@@ -20,8 +20,56 @@ import {
   Loader2
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { GoogleGenAI } from "@google/genai";
 
 const WHATSAPP_LINK = "https://wa.me/79000000000";
+
+const SYSTEM_INSTRUCTION = `Ты — профессиональный заботливый ассистент велнес-студии «РЕСУРС» в Альметьевске. 
+Твоя цель: помочь клиенту выбрать подходящую процедуру, рассказать о методиках и мягко подвести к записи.
+
+О КОМПАНИИ:
+Название: Студия «РЕСУРС».
+Локация: Альметьевск, ул. Ленина, д. 100.
+Режим работы: 09:00 — 21:00 по предварительной записи.
+Парковка: Собственная, всегда свободна.
+
+МЕТОДИКИ:
+1. Живой Пар:
+- Мягкий ионизированный пар (не баня, не сауна).
+- Температура около 40-42°C.
+- Процедура в специальной капсуле.
+- Длительность 15–20 минут.
+- Эффект: ощелачивание, расслабление, восстановление, чувство легкости.
+2. Синусоида:
+- Аппаратная велнес-процедура для мягкого волнового воздействия на позвоночник.
+- Плавные волнообразные колебания.
+- Длительность ~15 минут.
+- Эффект: снятие мышечного напряжения, улучшение состояния спины и шеи.
+3. Массаж:
+- Классические и авторские техники.
+- Длительность от 60 минут.
+4. Комплекс (Пар + Синусоида):
+- Идеален для перезагрузки.
+- Занимает 30 минут активного времени (40 минут общего пребывания).
+
+ЦЕНЫ:
+- Пробный визит: от 1 500 руб.
+- Комплекс (Пар + Синусоида): 3 500 руб.
+- Абонементы (5 визитов): 12 500 руб.
+
+ВАЖНЫЕ ПРАВИЛА (SAFETY LAYER):
+- МЫ НЕ МЕДИЦИНСКАЯ ОРГАНИЗАЦИЯ. Мы не ставим диагнозы и не лечим.
+- Не делай медицинских обещаний. Вместо "вылечим грыжу" говори "поможет расслабить мышцы и снять напряжение".
+- При упоминании серьезных болей, температуры, беременности — ВСЕГДА советуй проконсультироваться с лечащим врачом перед визитом.
+- Мы wellness-студия телесного восстановления.
+
+ТОНАЛЬНОСТЬ:
+Заботливая, спокойная, уверенная, лаконичная. Обращайся на "вы" (вежливо).
+
+ДЕЙСТВИЕ ПРИ ЗАПИСИ:
+Если клиент готов записаться, сообщи, что запись ведется через WhatsApp и предоставь номер +7 (900) 000-00-00. Ссылка на WhatsApp: ${WHATSAPP_LINK}`;
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // --- Components ---
 
@@ -92,53 +140,50 @@ export default function App() {
     if (!text.trim()) return;
 
     const userMessage = { id: Date.now().toString(), role: 'user', text };
-    setMessages(prev => [...prev, userMessage]);
+    const assistantId = (Date.now() + 1).toString();
+    
+    const chatHistory = messages
+      .filter((msg, index) => !(index === 0 && msg.role === 'assistant'))
+      .map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.text || '' }]
+      }));
+
+    setMessages(prev => [...prev, userMessage, { id: assistantId, role: 'assistant', text: '' }]);
     setInputValue('');
     setIsTyping(true);
 
     try {
-      const history = messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.text }]
-      }));
-
-      let assistantMessageId = (Date.now() + 1).toString();
-      setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', text: '' }]);
-
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history })
-      });
-
-      if (!response.ok) {
-        let errorMessage = "Failed to fetch from API";
-        try {
-          const contentType = response.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            const errorData = await response.json();
-            errorMessage = errorData.error || errorMessage;
-          } else {
-            const errorText = await response.text();
-            errorMessage = `API Error (${response.status}): ${errorText.substring(0, 100)}`;
-          }
-        } catch (e) {
-          errorMessage = `API Error (${response.status})`;
-        }
-        throw new Error(errorMessage);
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error("GEMINI_API_KEY is not configured");
       }
 
-      const assistantText = await response.text();
+      // Add the current user message to the local history for the model call
+      const combinedHistory = [
+        ...chatHistory,
+        { role: 'user', parts: [{ text: text }] }
+      ];
+
+      const result = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: combinedHistory,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION
+        }
+      });
+
+      const assistantText = result.text || '';
+      
       setMessages(prev => prev.map(msg => 
-        msg.id === assistantMessageId ? { ...msg, text: assistantText } : msg
+        msg.id === assistantId ? { ...msg, text: assistantText } : msg
       ));
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI Error:", error);
-      setMessages(prev => [...prev, { 
-        id: Date.now().toString(), 
-        role: 'assistant', 
-        text: 'Извините, произошла ошибка. Пожалуйста, попробуйте позже или напишите нам в WhatsApp.' 
-      }]);
+      setMessages(prev => prev.map(msg => 
+        msg.id === assistantId 
+          ? { ...msg, text: `К сожалению, произошла ошибка в работе ассистента: ${error.message}. Пожалуйста, напишите нам напрямую в WhatsApp.` } 
+          : msg
+      ));
     } finally {
       setIsTyping(false);
     }
@@ -777,7 +822,7 @@ export default function App() {
                   </div>
                 )}
                 
-                {isTyping && messages[messages.length - 1].text === '' && (
+                {isTyping && messages.length > 0 && messages[messages.length - 1]?.text === '' && (
                   <div className="flex gap-3">
                     <div className="w-8 h-8 rounded-full bg-studio-accent/20 flex items-center justify-center text-studio-accent shrink-0">
                       <Bot size={16} />
