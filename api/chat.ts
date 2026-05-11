@@ -1,21 +1,9 @@
-import express from "express";
-import { createServer as createViteServer } from "vite";
-import path from "path";
-import { fileURLToPath } from "url";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const WHATSAPP_LINK = "https://wa.me/79000000000";
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
-
-  app.use(express.json());
-
-  const WHATSAPP_LINK = "https://wa.me/79000000000";
-
-  const SYSTEM_INSTRUCTION = `Ты — профессиональный заботливый ассистент велнес-студии «РЕСУРС» в Альметьевске. 
+const SYSTEM_INSTRUCTION = `Ты — профессиональный заботливый ассистент велнес-студии «РЕСУРС» в Альметьевске. 
 Твоя цель: помочь клиенту выбрать подходящую процедуру, рассказать о методиках и мягко подвести к записи.
 
 О КОМПАНИИ:
@@ -60,50 +48,37 @@ async function startServer() {
 ДЕЙСТВИЕ ПРИ ЗАПИСИ:
 Если клиент готов записаться, сообщи, что запись ведется через WhatsApp и предоставь номер +7 (900) 000-00-00. Ссылка на WhatsApp: ${WHATSAPP_LINK}`;
 
-  app.post("/api/chat", async (req, res) => {
-    const { message, history } = req.body;
-
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: "Ключ GEMINI_API_KEY не настроен на сервере." });
-    }
-
-    try {
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        systemInstruction: SYSTEM_INSTRUCTION 
-      });
-
-      const chat = model.startChat({
-        history: history || [],
-      });
-
-      const result = await chat.sendMessage(message);
-      res.send(result.response.text());
-    } catch (error: any) {
-      console.error("AI Error:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-   // Vite middleware for development
-   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
+  const { message, history } = req.body;
 
-startServer();
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: "Ключ GEMINI_API_KEY не найден в переменных окружения Vercel." });
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: SYSTEM_INSTRUCTION 
+    });
+
+    const chat = model.startChat({
+      history: history || [],
+    });
+
+    const result = await chat.sendMessage(message);
+    const responseText = result.response.text();
+    
+    return res.status(200).send(responseText);
+  } catch (error: any) {
+    console.error("Vercel AI Error:", error);
+    return res.status(500).json({ 
+      error: `Ошибка ИИ: ${error.message || "Неизвестная ошибка"}`,
+      details: error.toString() 
+    });
+  }
+}
