@@ -60,8 +60,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // Correct way to pass system instructions
+    const key = process.env.GEMINI_API_KEY?.trim();
+    if (!key) {
+      return res.status(500).json({ error: "Ключ GEMINI_API_KEY не найден в переменных окружения Vercel. Убедитесь, что вы добавили его в настройках проекта и создали новый Deploy." });
+    }
+
+    const genAI = new GoogleGenerativeAI(key);
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
       systemInstruction: SYSTEM_INSTRUCTION 
@@ -78,8 +82,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error: any) {
     console.error("Vercel API Error Detail:", error);
     return res.status(500).json({ 
-      error: `Ошибка ИИ: ${error.message || "Неизвестная ошибка"}`,
-      details: error.stack 
+      error: `Ошибка ИИ на сервере: ${error.message || "Неизвестная ошибка"}`,
+      details: error.toString()
     });
   }
 }
