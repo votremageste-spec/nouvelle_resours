@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const WHATSAPP_LINK = "https://wa.me/79000000000";
@@ -55,29 +55,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { message, history } = req.body;
 
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(500).json({ error: "Ключ GEMINI_API_KEY не найден в переменных окружения Vercel." });
+  const env = process.env;
+  // Приоритет вашему новому ключу GOOGLE_API_KEY
+  const rawKey = (env.GOOGLE_API_KEY || env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || env.NEXT_PUBLIC_GEMINI_API_KEY);
+  const key = rawKey?.trim().replace(/^["']|["']$/g, '').replace(/\\n/g, '').replace(/\\r/g, '');
+
+  if (!key) {
+    const availableKeys = Object.keys(env).filter(k => k.includes("GEMINI") || k.includes("API")).join(", ");
+    return res.status(500).json({ 
+      error: "Ключ API не найден в переменных окружения Vercel.",
+      debug: `Доступные ключи: [${availableKeys || "нет"}]. Убедитесь, что после добавления ключа вы нажали 'Redeploy' в панели Vercel.`
+    });
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: SYSTEM_INSTRUCTION 
-    });
-
-    const chat = model.startChat({
-      history: history || [],
-    });
-
-    const result = await chat.sendMessage(message);
-    const responseText = result.response.text();
+    const ai = new GoogleGenAI({ apiKey: key });
     
-    return res.status(200).send(responseText);
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [
+        ...(history || []).map((item: any) => ({
+          role: item.role === 'assistant' ? 'model' : item.role,
+          parts: [{ text: String(item.parts?.[0]?.text || item.text || item.parts || "") }]
+        })),
+        { role: 'user', parts: [{ text: message }] }
+      ],
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION
+      }
+    });
+
+    return res.status(200).send(response.text);
   } catch (error: any) {
     console.error("Vercel AI Error:", error);
+    const errorMsg = error.message || "";
+    const isInvalidKey = errorMsg.includes("API key not valid") || errorMsg.includes("403") || errorMsg.includes("401");
+    const isPlaceholder = key.includes("aBcD");
+    
     return res.status(500).json({ 
-      error: `Ошибка ИИ: ${error.message || "Неизвестная ошибка"}`,
+      error: isInvalidKey ? "Предоставленный API ключ недействителен." : `Ошибка ИИ: ${errorMsg}`,
+      debug: isInvalidKey 
+        ? `Ключ (длина: ${key.length}, начало: ${key.substring(0, 6)}..., конец: ...${key.substring(key.length - 4)}) отклонен Google. ${isPlaceholder ? "ПОХОЖЕ, ВЫ ИСПОЛЬЗУЕТЕ ПРИМЕР КЛЮЧА (AIzaSyB-aBcD...). Пожалуйста, создайте свой ключ на aistudio.google.com/app/apikey" : ""}` 
+        : error.toString(),
       details: error.toString() 
     });
   }

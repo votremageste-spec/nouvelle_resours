@@ -2,7 +2,7 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,26 +63,50 @@ async function startServer() {
   app.post("/api/chat", async (req, res) => {
     const { message, history } = req.body;
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: "Ключ GEMINI_API_KEY не настроен на сервере." });
+    const env = process.env;
+    // Приоритет вашему новому ключу GOOGLE_API_KEY
+    const rawKey = (env.GOOGLE_API_KEY || env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || env.NEXT_PUBLIC_GEMINI_API_KEY);
+    const key = rawKey?.trim().replace(/^["']|["']$/g, '').replace(/\\n/g, '').replace(/\\r/g, '');
+
+    if (!key) {
+      const availableKeys = Object.keys(env).filter(k => k.includes("GEMINI") || k.includes("API")).join(", ");
+      console.log("No API key found. Available keys:", availableKeys);
+      return res.status(500).json({ 
+        error: "Ключ API не настроен в AI Studio.",
+        debug: `Доступные ключи: [${availableKeys || "нет"}]. Убедитесь, что вы добавили GEMINI_API_KEY в Settings -> Secrets (или Environment Variables).`
+      });
     }
 
     try {
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        systemInstruction: SYSTEM_INSTRUCTION 
+      const ai = new GoogleGenAI({ apiKey: key });
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          ...(history || []).map((item: any) => ({
+            role: item.role === 'assistant' ? 'model' : item.role,
+            parts: [{ text: String(item.parts?.[0]?.text || item.text || item.parts || "") }]
+          })),
+          { role: 'user', parts: [{ text: message }] }
+        ],
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION
+        }
       });
 
-      const chat = model.startChat({
-        history: history || [],
-      });
-
-      const result = await chat.sendMessage(message);
-      res.send(result.response.text());
+      res.send(response.text);
     } catch (error: any) {
       console.error("AI Error:", error);
-      res.status(500).json({ error: error.message });
+      const errorMsg = error.message || "";
+      const isInvalidKey = errorMsg.includes("API key not valid") || errorMsg.includes("403") || errorMsg.includes("401");
+      const isPlaceholder = key.includes("aBcD");
+      
+      res.status(500).json({ 
+        error: isInvalidKey ? "Предоставленный API ключ недействителен." : `Ошибка ИИ: ${errorMsg}`,
+        debug: isInvalidKey 
+          ? `Ключ (длина: ${key.length}, начало: ${key.substring(0, 6)}..., конец: ...${key.substring(key.length - 4)}) отклонен Google. ${isPlaceholder ? "ПОХОЖЕ, ВЫ ИСПОЛЬЗУЕТЕ ПРИМЕР КЛЮЧА (AIzaSyB-aBcD...). Пожалуйста, создайте свой ключ на aistudio.google.com/app/apikey" : ""}` 
+          : error.toString()
+      });
     }
   });
 
