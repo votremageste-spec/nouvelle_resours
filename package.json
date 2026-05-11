@@ -4,18 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development tsx server.ts",
+    "dev": "tsx server.ts",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
+    "@google/genai": "^2.0.1",
     "@tailwindcss/vite": "^4.1.14",
-    "@vercel/node": "^5.7.17",
     "@vitejs/plugin-react": "^5.0.4",
-    "dotenv": "^17.2.3",
     "express": "^4.22.1",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
