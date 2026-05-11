@@ -80,15 +80,26 @@ async function startServer() {
     try {
       const ai = new GoogleGenAI({ apiKey: key });
       
+      // Форматируем историю более надежно
+      const contents = (history || []).map((item: any) => {
+        let text = "";
+        if (typeof item.text === 'string') text = item.text;
+        else if (Array.isArray(item.parts)) text = item.parts[0]?.text || "";
+        else if (typeof item.parts === 'string') text = item.parts;
+        else if (item.content) text = item.content;
+        
+        return {
+          role: item.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: String(text || "") }]
+        };
+      });
+
+      // Добавляем текущее сообщение
+      contents.push({ role: 'user', parts: [{ text: message }] });
+
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          ...(history || []).map((item: any) => ({
-            role: item.role === 'assistant' ? 'model' : item.role,
-            parts: [{ text: String(item.parts?.[0]?.text || item.text || item.parts || "") }]
-          })),
-          { role: 'user', parts: [{ text: message }] }
-        ],
+        model: "gemini-flash-latest",
+        contents,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION
         }
@@ -96,16 +107,23 @@ async function startServer() {
 
       res.send(response.text);
     } catch (error: any) {
-      console.error("AI Error:", error);
-      const errorMsg = error.message || "";
-      const isInvalidKey = errorMsg.includes("API key not valid") || errorMsg.includes("403") || errorMsg.includes("401");
-      const isPlaceholder = key.includes("aBcD");
+      console.error("AI Error Detailed:", error);
+      let errorMsg = error.message || String(error);
+      
+      // Обработка специфических ошибок Google API
+      if (errorMsg.includes("503") || errorMsg.includes("UNAVAILABLE")) {
+        errorMsg = "Сервер Google временно перегружен. Пожалуйста, попробуйте еще раз через полминуты.";
+      } else if (errorMsg.includes("429") || errorMsg.includes("QUOTA_EXCEEDED")) {
+        errorMsg = "Исчерпан лимит запросов. Попробуйте еще раз через минуту.";
+      } else if (errorMsg.includes("403") || errorMsg.includes("401") || errorMsg.includes("API_KEY_INVALID")) {
+        errorMsg = "Ошибка авторизации: ваш API ключ не принят Google. Проверьте его в настройках.";
+      } else if (errorMsg.includes("404") || errorMsg.includes("NOT_FOUND")) {
+        errorMsg = "Модель не найдена (gemini-flash-latest). Возможно, ваш ключ не поддерживает эту модель.";
+      }
       
       res.status(500).json({ 
-        error: isInvalidKey ? "Предоставленный API ключ недействителен." : `Ошибка ИИ: ${errorMsg}`,
-        debug: isInvalidKey 
-          ? `Ключ (длина: ${key.length}, начало: ${key.substring(0, 6)}..., конец: ...${key.substring(key.length - 4)}) отклонен Google. ${isPlaceholder ? "ПОХОЖЕ, ВЫ ИСПОЛЬЗУЕТЕ ПРИМЕР КЛЮЧА (AIzaSyB-aBcD...). Пожалуйста, создайте свой ключ на aistudio.google.com/app/apikey" : ""}` 
-          : error.toString()
+        error: `Ошибка ИИ: ${errorMsg}`,
+        debug: `Ключ (первые 6 симв.): ${key.substring(0, 6)}...`
       });
     }
   });

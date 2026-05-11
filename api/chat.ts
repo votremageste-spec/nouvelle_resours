@@ -71,15 +71,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const ai = new GoogleGenAI({ apiKey: key });
     
+    // Форматируем историю более надежно
+    const contents = (history || []).map((item: any) => {
+      let text = "";
+      if (typeof item.text === 'string') text = item.text;
+      else if (Array.isArray(item.parts)) text = item.parts[0]?.text || "";
+      else if (typeof item.parts === 'string') text = item.parts;
+      else if (item.content) text = item.content;
+      
+      return {
+        role: item.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: String(text || "") }]
+      };
+    });
+
+    // Добавляем текущее сообщение
+    contents.push({ role: 'user', parts: [{ text: message }] });
+
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [
-        ...(history || []).map((item: any) => ({
-          role: item.role === 'assistant' ? 'model' : item.role,
-          parts: [{ text: String(item.parts?.[0]?.text || item.text || item.parts || "") }]
-        })),
-        { role: 'user', parts: [{ text: message }] }
-      ],
+      model: "gemini-flash-latest",
+      contents,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION
       }
@@ -87,17 +98,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).send(response.text);
   } catch (error: any) {
-    console.error("Vercel AI Error:", error);
-    const errorMsg = error.message || "";
-    const isInvalidKey = errorMsg.includes("API key not valid") || errorMsg.includes("403") || errorMsg.includes("401");
-    const isPlaceholder = key.includes("aBcD");
+    console.error("Vercel AI Error Detailed:", error);
+    let errorMsg = error.message || String(error);
+    
+    // Обработка специфических ошибок Google API
+    if (errorMsg.includes("503") || errorMsg.includes("UNAVAILABLE")) {
+      errorMsg = "Сервер Google временно перегружен. Это часто случается на бесплатном тарифе. Пожалуйста, попробуйте еще раз через полминуты.";
+    } else if (errorMsg.includes("429") || errorMsg.includes("QUOTA_EXCEEDED")) {
+      errorMsg = "Превышен лимит запросов (Quota Exceeded). Пожалуйста, подождите немного или используйте платный ключ.";
+    } else if (errorMsg.includes("403") || errorMsg.includes("401") || errorMsg.includes("API_KEY_INVALID")) {
+      errorMsg = "Проблема с ключом API. Убедитесь, что в переменных Vercel ключ GOOGLE_API_KEY указан верно и проект опубликован (Redeployed).";
+    } else if (errorMsg.includes("404") || errorMsg.includes("NOT_FOUND")) {
+      errorMsg = "Модель не найдена. Похоже, ваш ключ не имеет доступа к выбранной модели (gemini-flash-latest).";
+    }
     
     return res.status(500).json({ 
-      error: isInvalidKey ? "Предоставленный API ключ недействителен." : `Ошибка ИИ: ${errorMsg}`,
-      debug: isInvalidKey 
-        ? `Ключ (длина: ${key.length}, начало: ${key.substring(0, 6)}..., конец: ...${key.substring(key.length - 4)}) отклонен Google. ${isPlaceholder ? "ПОХОЖЕ, ВЫ ИСПОЛЬЗУЕТЕ ПРИМЕР КЛЮЧА (AIzaSyB-aBcD...). Пожалуйста, создайте свой ключ на aistudio.google.com/app/apikey" : ""}` 
-        : error.toString(),
-      details: error.toString() 
+      error: `Ошибка ИИ: ${errorMsg}`,
+      debug: `Код ошибки: ${error.status || 'неизвестен'}. Ключ: ${key.substring(0, 6)}...`
     });
   }
 }
