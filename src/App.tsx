@@ -18,10 +18,16 @@ import {
   Send,
   User,
   Bot,
-  Loader2
+  Loader2,
+  Globe,
+  ExternalLink,
+  Zap,
+  Coffee
 } from "lucide-react";
+import { translations, Language } from "./locales";
 
 const WHATSAPP_LINK = "https://wa.me/79000000000";
+const MAP_LINK = "https://yandex.ru/maps/-/CCU8v8V8XD"; // Example real route
 
 // --- Components ---
 
@@ -70,13 +76,25 @@ const SectionHeading = ({ title, subtitle, badge }: any) => (
 // --- Sections ---
 
 export default function App() {
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem('resurs_lang');
+    return (saved as Language) || 'ru';
+  });
+
+  const t = translations[lang];
+
+  useEffect(() => {
+    localStorage.setItem('resurs_lang', lang);
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
 
   // AI Chat State
   const [messages, setMessages] = useState<any[]>([
-    { id: '1', role: 'assistant', text: 'Добрый день! Я цифровой ассистент студии «РЕСУРС». Помогу вам выбрать процедуру, отвечу на вопросы о длительности и помогу записаться. \n\nЧто вас интересует?' }
+    { id: '1', role: 'assistant', text: t.assistant.welcome }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -109,7 +127,7 @@ export default function App() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history })
+        body: JSON.stringify({ message: text, history, lang })
       });
 
       if (!response.ok) {
@@ -152,18 +170,35 @@ export default function App() {
             <div className="w-10 h-10 rounded-full bg-studio-accent flex items-center justify-center text-white shadow-lg">
               <span className="font-serif font-bold text-xl uppercase tracking-tighter">Р</span>
             </div>
-            <span className="font-serif text-2xl tracking-[0.2em] font-medium uppercase text-studio-ink">Ресурс</span>
+            <span className="font-serif text-2xl tracking-[0.2em] font-medium uppercase text-studio-ink">{t.common.title}</span>
           </div>
 
-          <div className="hidden lg:flex items-center gap-10 text-[10px] uppercase tracking-[0.25em] font-bold text-studio-muted">
-            <a href="#services" className="hover:text-studio-accent transition-colors">Услуги</a>
-            <a href="#audience" className="hover:text-studio-accent transition-colors">Кому подходит</a>
-            <a href="#process" className="hover:text-studio-accent transition-colors">Как проходит</a>
-            <a href="#reviews" className="hover:text-studio-accent transition-colors">Отзывы</a>
-            <a href="#pricing" className="hover:text-studio-accent transition-colors">Цены</a>
-            <a href="#faq" className="hover:text-studio-accent transition-colors">Вопросы</a>
-            <a href="#contacts" className="hover:text-studio-accent transition-colors">Контакты</a>
-            <Button href={WHATSAPP_LINK} target="_blank" className="!px-6 !py-2.5">Записаться</Button>
+          <div className="hidden lg:flex items-center gap-8 text-[10px] uppercase tracking-[0.25em] font-bold text-studio-muted">
+            <a href="#services" className="hover:text-studio-accent transition-colors">{t.nav.services}</a>
+            <a href="#audience" className="hover:text-studio-accent transition-colors">{t.nav.audience}</a>
+            <a href="#process" className="hover:text-studio-accent transition-colors">{t.nav.process}</a>
+            <a href="#pricing" className="hover:text-studio-accent transition-colors">{t.nav.pricing}</a>
+            <a href="#reviews" className="hover:text-studio-accent transition-colors">{t.nav.reviews}</a>
+            <a href="#faq" className="hover:text-studio-accent transition-colors">{t.nav.faq}</a>
+            <a href="#contacts" className="hover:text-studio-accent transition-colors">{t.nav.contacts}</a>
+            
+            <div className="flex items-center gap-2 border-l border-studio-line pl-6 ml-2">
+              <button 
+                onClick={() => setLang('ru')}
+                className={`transition-colors ${lang === 'ru' ? 'text-studio-accent' : 'hover:text-studio-accent'}`}
+              >
+                RU
+              </button>
+              <span className="opacity-20 italic">|</span>
+              <button 
+                onClick={() => setLang('tt')}
+                className={`transition-colors ${lang === 'tt' ? 'text-studio-accent' : 'hover:text-studio-accent'}`}
+              >
+                TT
+              </button>
+            </div>
+            
+            <Button href={WHATSAPP_LINK} target="_blank" className="!px-6 !py-2.5">{t.nav.book}</Button>
           </div>
 
           <button className="lg:hidden text-studio-ink" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -180,15 +215,22 @@ export default function App() {
               exit={{ opacity: 0, height: 0 }}
               className="lg:hidden bg-studio-bg border-b border-studio-line overflow-hidden"
             >
-              <div className="flex flex-col p-8 gap-6 text-[12px] uppercase tracking-[0.3em] font-bold text-center">
-                <a href="#services" onClick={() => setMobileMenuOpen(false)}>Услуги</a>
-                <a href="#audience" onClick={() => setMobileMenuOpen(false)}>Кому подходит</a>
-                <a href="#process" onClick={() => setMobileMenuOpen(false)}>Как проходит</a>
-                <a href="#reviews" onClick={() => setMobileMenuOpen(false)}>Отзывы</a>
-                <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Цены</a>
-                <a href="#faq" onClick={() => setMobileMenuOpen(false)}>Вопросы</a>
-                <a href="#contacts" onClick={() => setMobileMenuOpen(false)}>Контакты</a>
-                <Button href={WHATSAPP_LINK} target="_blank">Записаться в WhatsApp</Button>
+              <div className="flex flex-col p-8 gap-5 text-[12px] uppercase tracking-[0.3em] font-bold text-center">
+                <a href="#services" onClick={() => setMobileMenuOpen(false)}>{t.nav.services}</a>
+                <a href="#audience" onClick={() => setMobileMenuOpen(false)}>{t.nav.audience}</a>
+                <a href="#process" onClick={() => setMobileMenuOpen(false)}>{t.nav.process}</a>
+                <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>{t.nav.pricing}</a>
+                <a href="#reviews" onClick={() => setMobileMenuOpen(false)}>{t.nav.reviews}</a>
+                <a href="#faq" onClick={() => setMobileMenuOpen(false)}>{t.nav.faq}</a>
+                <a href="#contacts" onClick={() => setMobileMenuOpen(false)}>{t.nav.contacts}</a>
+                
+                <div className="flex justify-center items-center gap-4 py-2 border-y border-studio-line">
+                  <button onClick={() => { setLang('ru'); setMobileMenuOpen(false); }} className={lang === 'ru' ? 'text-studio-accent' : ''}>RU</button>
+                  <span className="opacity-20 italic">|</span>
+                  <button onClick={() => { setLang('tt'); setMobileMenuOpen(false); }} className={lang === 'tt' ? 'text-studio-accent' : ''}>TT</button>
+                </div>
+                
+                <Button href={WHATSAPP_LINK} target="_blank">{t.nav.book}</Button>
               </div>
             </motion.div>
           )}
@@ -216,38 +258,38 @@ export default function App() {
             className="max-w-4xl"
           >
             <span className="inline-block px-4 py-1.5 border border-studio-accent/40 text-studio-accent rounded-full text-[10px] uppercase tracking-[0.4em] font-bold mb-8 bg-studio-bg/30 backdrop-blur-sm">
-              Альметьевск • wellness-студия телесного восстановления
+              {t.hero.badge}
             </span>
             <h1 className="text-5xl md:text-8xl lg:text-9xl font-light leading-[1.05] tracking-tighter mb-10">
-              ВЕРНИ СЕБЕ <br />
-              <span className="italic-serif text-studio-accent">РЕСУРС</span>
+              {t.hero.h1.split(' ')[0]} {t.hero.h1.split(' ')[1]} <br />
+              <span className="italic-serif text-studio-accent">{t.hero.h1.split(' ').slice(2).join(' ')}</span>
             </h1>
             <p className="max-w-xl text-lg md:text-xl text-studio-ink font-light leading-relaxed mb-10">
-              Мягкое восстановление через Живой Пар, Синусоиду и массаж. Для тех, кто устал, чувствует напряжение в теле и хочет вернуться к ощущению лёгкости.
+              {t.hero.subtitle}
             </p>
             
             <div className="p-5 border-l-2 border-studio-accent/20 mb-12 bg-white/10 backdrop-blur-sm rounded-r-2xl max-w-xl">
                <p className="text-sm italic text-studio-muted">
-                Без медицинских обещаний. Только тепло, движение, забота и спокойное внимание к телу.
+                {t.hero.disclaimer}
                </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
               <Button href={WHATSAPP_LINK} target="_blank" className="!px-10 !py-5 shadow-2xl">
-                Записаться на первый визит
+                {t.hero.cta}
               </Button>
               <Button onClick={() => setIsAiOpen(true)} variant="secondary" className="!px-10 !py-5">
-                Помочь выбрать процедуру
+                {t.hero.ctaAssistant}
               </Button>
             </div>
             
             {/* 6.3 Быстрые факты */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 lg:mt-24">
               {[
-                { icon: Waves, text: "Живой Пар — 15–20 минут" },
-                { icon: Clock, text: "Комплекс — около 30 минут" },
-                { icon: MapPin, text: "Удобная парковка" },
-                { icon: Heart, text: "Всё необходимое подготовим" }
+                { icon: Waves, text: t.facts[0] },
+                { icon: Clock, text: t.facts[1] },
+                { icon: MapPin, text: t.facts[2] },
+                { icon: Heart, text: t.facts[3] }
               ].map((fact, i) => (
                 <div key={i} className="flex flex-col gap-3 p-5 bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 hover:bg-white/60 transition-colors">
                   <fact.icon size={18} className="text-studio-accent" />
@@ -259,44 +301,79 @@ export default function App() {
         </div>
       </header>
 
-      {/* 13. Главный продающий блок: Комплекс */}
+      {/* 8. Блок «Чем мы отличаемся» */}
+      <section className="py-24 bg-studio-card border-b border-studio-line">
+        <div className="studio-container">
+          <div className="max-w-5xl">
+            <h2 className="text-3xl md:text-5xl font-light mb-8 leading-tight">
+              {t.different.title}
+            </h2>
+            <p className="text-xl md:text-2xl text-studio-muted font-light leading-relaxed">
+              {t.different.text}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Главный продающий блок: Комплекс */}
       <section className="py-24 bg-studio-ink text-white">
         <div className="studio-container">
           <div className="grid lg:grid-cols-2 gap-20 items-center">
             <div>
-              <span className="text-studio-accent text-[11px] uppercase tracking-[0.4em] font-bold mb-6 block">Главный продукт</span>
-              <h2 className="text-5xl md:text-7xl font-light mb-8">Перезагрузка тела за один визит</h2>
+              <span className="text-studio-accent text-[11px] uppercase tracking-[0.4em] font-bold mb-6 block">{t.recharge.badge}</span>
+              <h2 className="text-5xl md:text-7xl font-light mb-8">{t.recharge.title}</h2>
               <p className="text-xl text-white/70 font-light leading-relaxed mb-12">
-                Сначала мягкий <span className="text-white font-medium underline underline-offset-8">Живой Пар</span> помогает телу расслабиться и согреться. Затем <span className="text-white font-medium underline underline-offset-8">Синусоида</span> добавляет плавное движение, чтобы вернуть ощущение лёгкости.
+                {t.recharge.p1} <span className="text-white font-medium underline underline-offset-8 font-serif italic text-lg">{t.services.steam.title}</span> {t.recharge.p2} <span className="text-white font-medium underline underline-offset-8 font-serif italic text-lg">{t.services.sinus.title}</span> {t.recharge.p3}
               </p>
               
               <div className="grid grid-cols-2 gap-10 mb-12">
                 <div className="space-y-2">
-                  <div className="text-[10px] uppercase tracking-widest opacity-50">Активное время</div>
-                  <div className="text-3xl font-serif italic text-studio-accent">30 минут</div>
+                  <div className="text-[10px] uppercase tracking-widest opacity-50">{t.recharge.activeTimeLabel}</div>
+                  <div className="text-3xl font-serif italic text-studio-accent">{t.recharge.activeTimeValue}</div>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-[10px] uppercase tracking-widest opacity-50">Полный визит</div>
-                  <div className="text-3xl font-serif italic text-studio-accent">40 минут</div>
+                  <div className="text-[10px] uppercase tracking-widest opacity-50">{t.recharge.fullVisitLabel}</div>
+                  <div className="text-3xl font-serif italic text-studio-accent">{t.recharge.fullVisitValue}</div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <Button href={WHATSAPP_LINK} className="w-full sm:w-auto !bg-studio-accent hover:!bg-white hover:text-studio-ink">Попробовать комплекс</Button>
-                <p className="text-[10px] opacity-40 uppercase tracking-widest">Не является медицинской процедурой</p>
+                <Button href={WHATSAPP_LINK} className="w-full sm:w-auto !bg-studio-accent hover:!bg-white hover:text-studio-ink">{t.recharge.cta}</Button>
+                <p className="text-[10px] opacity-40 uppercase tracking-widest">{t.common.nonMedical}</p>
               </div>
             </div>
             <div className="relative">
                <div className="aspect-square rounded-[60px] overflow-hidden">
                  <img 
                   src="https://images.unsplash.com/photo-1591343395902-1adcb454c7e7?q=80&w=2574&auto=format&fit=crop" 
-                  alt="Atmosphere" 
+                  alt="РЕСУРС" 
                   className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
                  />
                </div>
                <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-white/10 backdrop-blur-2xl rounded-full border border-white/10 flex items-center justify-center p-6 text-center animate-pulse-slow">
-                 <span className="font-serif italic text-xl">Верни себе состояние</span>
+                 <span className="font-serif italic text-xl">{t.recharge.floatingNote}</span>
                </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Важная рамка (Prominent Important Frame) */}
+      <section className="py-12 bg-studio-bg">
+        <div className="studio-container">
+          <div className="p-10 md:p-16 bg-studio-accent/5 border-2 border-dashed border-studio-accent/20 rounded-[50px] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-studio-accent/5 rounded-bl-full"></div>
+            <div className="relative z-10 max-w-4xl mx-auto flex flex-col md:flex-row gap-10 items-center">
+              <div className="w-20 h-20 rounded-full bg-studio-accent text-white flex items-center justify-center shrink-0">
+                <Zap size={36} />
+              </div>
+              <div>
+                <h4 className="text-2xl md:text-3xl font-serif italic mb-4 text-studio-ink">{t.importantFrame.title}</h4>
+                <p className="text-studio-muted leading-relaxed">
+                  {t.importantFrame.text}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -306,27 +383,20 @@ export default function App() {
       <section id="audience" className="py-32 bg-white">
         <div className="studio-container">
           <SectionHeading 
-            badge="Кому подходит"
-            title="Для тех, чьему телу нужно восстановление"
-            subtitle="Выберите, что ближе к вашему состоянию — мы подскажем мягкий формат первого визита."
+            badge={t.audience.badge}
+            title={t.audience.title}
+            subtitle={t.audience.subtitle}
           />
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { title: "Офисные сотрудники", p: "Напряжение в шее, спине, хроническая усталость.", offer: "Синусоида + массаж спины", note: "60 минут — и тело снова ваше" },
-              { title: "Пенсионеры 60+", p: "Скованность, усталость после активности.", offer: "Живой Пар, курс из 10 визитов", note: "Мягко. Спокойно. С ощутимой заботой" },
-              { title: "Спортсмены", p: "Забитые мышцы, восстановление после нагрузки.", offer: "Синусоида + Живой Пар", note: "Восстановление как часть тренировки" },
-              { title: "Мамы", p: "Нет времени на себя, тревожность, стресс.", offer: "Пар + массаж, сертификаты", note: "Ваш личный час восстановления" },
-              { title: "Корпоративные клиенты", p: "Усталость сотрудников, HR-задачи.", offer: "Абонементы и групповые визиты", note: "Забота о команде — инвестиция" },
-              { title: "Профилактика", p: "Желание предотвратить накопление усталости.", offer: "Курсы 10–15 сеансов", note: "Лучшее вложение в себя" }
-            ].map((card, i) => (
+            {t.audience.cards.map((card, i) => (
               <div key={i} className="group p-10 bg-studio-card border border-studio-line rounded-[40px] hover:border-studio-accent transition-all duration-500 flex flex-col justify-between">
                 <div>
-                  <h4 className="text-2xl font-medium mb-4">{card.title}</h4>
+                  <h4 className="text-2xl font-serif mb-4 italic">{card.title}</h4>
                   <p className="text-studio-muted text-sm leading-relaxed mb-8">{card.p}</p>
                 </div>
                 <div className="pt-8 border-t border-studio-line">
-                  <div className="text-[10px] uppercase tracking-widest text-studio-accent font-bold mb-2">Рекомендуем:</div>
+                  <div className="text-[10px] uppercase tracking-widest text-studio-accent font-bold mb-2">{t.common.recommendationLabel}</div>
                   <div className="text-sm font-medium mb-3">{card.offer}</div>
                   <div className="text-xs italic text-studio-muted">{card.note}</div>
                 </div>
@@ -339,7 +409,7 @@ export default function App() {
       {/* 8-12. Услуги */}
       <section id="services" className="py-32">
         <div className="studio-container">
-          <SectionHeading badge="Методики" title="Три пути к восстановлению" />
+          <SectionHeading badge={t.services.badge} title={t.services.title} />
           
           <div className="grid gap-32">
             {/* Живой Пар */}
@@ -354,21 +424,21 @@ export default function App() {
               </div>
               <div>
                 <Waves className="text-studio-accent mb-8" size={40} />
-                <h3 className="text-4xl md:text-6xl font-light mb-8">Живой Пар</h3>
+                <h3 className="text-4xl md:text-6xl font-light mb-8">{t.services.steam.title}</h3>
                 <p className="text-xl font-light text-studio-muted leading-relaxed mb-8">
-                  Мягкий ионизированный пар при комфортной температуре около 40-42°C в специальной капсуле. 15–20 минут тепла, влажности и спокойного дыхания. Это не баня и не сауна: здесь нет экстремального жара и спешки. В процессе процедуры происходит ощелачивание, способствующее восстановлению, само оздоровлению, и ощущению молодости.
+                  {t.services.steam.p}
                 </p>
                 <div className="flex gap-10 mb-10">
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">Время</div>
-                    <div className="text-2xl font-serif">15-20 мин</div>
+                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
+                    <div className="text-2xl font-serif">{t.services.steam.time}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">Температура</div>
-                    <div className="text-2xl font-serif">Комфортная</div>
+                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.taglineLabel}</div>
+                    <div className="text-2xl font-serif">{t.services.steam.temp}</div>
                   </div>
                 </div>
-                <Button variant="secondary" href={WHATSAPP_LINK} target="_blank">Записаться на Живой Пар</Button>
+                <Button variant="secondary" href={WHATSAPP_LINK} target="_blank">{t.services.steam.cta}</Button>
               </div>
             </div>
 
@@ -376,21 +446,21 @@ export default function App() {
             <div className="grid md:grid-cols-2 gap-16 items-center">
               <div className="order-2 md:order-1">
                 <Wind className="text-studio-accent mb-8" size={40} />
-                <h3 className="text-4xl md:text-6xl font-light mb-8">Синусоида</h3>
+                <h3 className="text-4xl md:text-6xl font-light mb-8">{t.services.sinus.title}</h3>
                 <p className="text-xl font-light text-studio-muted leading-relaxed mb-8">
-                  Синусоида — это аппаратная wellness-процедура, во время которой вы лежите и расслабляетесь, а тренажёр мягко передаёт телу волнообразное движение. Плавное восстановление без физической нагрузки.
+                  {t.services.sinus.p}
                 </p>
                 <div className="flex gap-10 mb-10">
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">Время</div>
-                    <div className="text-2xl font-serif">~15 мин</div>
+                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
+                    <div className="text-2xl font-serif">{t.services.sinus.time}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">Эффект</div>
-                    <div className="text-2xl font-serif">Легкость</div>
+                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.effectLabel}</div>
+                    <div className="text-2xl font-serif">{t.services.sinus.effect}</div>
                   </div>
                 </div>
-                <Button variant="secondary" href={WHATSAPP_LINK} target="_blank">Записаться на Синусоиду</Button>
+                <Button variant="secondary" href={WHATSAPP_LINK} target="_blank">{t.services.sinus.cta}</Button>
               </div>
               <div className="order-1 md:order-2 rounded-[60px] overflow-hidden aspect-[4/3] bg-studio-ink/10">
                 <img 
@@ -414,21 +484,21 @@ export default function App() {
               </div>
               <div>
                 <Hand className="text-studio-accent mb-8" size={40} />
-                <h3 className="text-4xl md:text-6xl font-light mb-8">Массаж</h3>
+                <h3 className="text-4xl md:text-6xl font-light mb-8">{t.services.massage.title}</h3>
                 <p className="text-xl font-light text-studio-muted leading-relaxed mb-8">
-                  Классические и авторские техники для расслабления, снятия напряжения и ощущения телесной лёгкости. Мастер подбирает интенсивность под ваше состояние.
+                  {t.services.massage.p}
                 </p>
                 <div className="flex gap-10 mb-10">
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">Время</div>
-                    <div className="text-2xl font-serif">от 60 мин</div>
+                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
+                    <div className="text-2xl font-serif">{t.services.massage.time}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">Техника</div>
-                    <div className="text-2xl font-serif">Индивидуально</div>
+                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.techniqueLabel}</div>
+                    <div className="text-2xl font-serif">{t.services.massage.technique}</div>
                   </div>
                 </div>
-                <Button variant="secondary" href={WHATSAPP_LINK} target="_blank">Выбрать массаж</Button>
+                <Button variant="secondary" href={WHATSAPP_LINK} target="_blank">{t.services.massage.cta}</Button>
               </div>
             </div>
           </div>
@@ -438,23 +508,16 @@ export default function App() {
       {/* 14. Как проходит первый визит */}
       <section id="process" className="py-32 bg-studio-card border-y border-studio-line">
         <div className="studio-container">
-          <SectionHeading badge="Процесс" title="Всё спокойно: мы проведём вас через каждый шаг" />
+          <SectionHeading badge={t.process.badge} title={t.process.title} />
           
           <div className="grid md:grid-cols-3 gap-12">
-            {[
-              { s: 1, t: "Запись", d: "Вы пишете в WhatsApp или задаете вопрос нашему ассистенту на сайте." },
-              { s: 2, t: "Уточнение", d: "Мы спрашиваем, что вас беспокоит и есть ли какие-то ограничения по здоровью." },
-              { s: 3, t: "Подбор", d: "Предлагаем Живой Пар, Синусоиду, массаж или их комплексное сочетание." },
-              { s: 4, t: "Подготовка", d: "На месте выдаем всё необходимое, объясняем правила и помогаем настроиться." },
-              { s: 5, t: "Процедура", d: "Вы отдыхаете, дышите и расслабляетесь в заботливой атмосфере студии." },
-              { s: 6, t: "После визита", d: "Можно выпить чай, задать вопросы мастеру и выбрать удобный курс." }
-            ].map((step, i) => (
+            {t.process.steps.map((step, i) => (
               <div key={i} className="flex gap-6">
                 <div className="w-12 h-12 rounded-full border border-studio-accent/30 flex items-center justify-center shrink-0 font-serif italic text-studio-accent text-xl">
                   {step.s}
                 </div>
                 <div>
-                  <h4 className="text-xl font-medium mb-2 uppercase tracking-wide">{step.t}</h4>
+                  <h4 className="text-xl font-serif italic mb-2 uppercase tracking-wide">{step.t}</h4>
                   <p className="text-studio-muted text-sm leading-relaxed">{step.d}</p>
                 </div>
               </div>
@@ -466,22 +529,17 @@ export default function App() {
       {/* 15-16. Форматы и цены */}
       <section id="pricing" className="py-32 bg-white">
         <div className="studio-container">
-          <SectionHeading badge="Цены" title="Форматы посещения" />
+          <SectionHeading badge={t.pricing.badge} title={t.pricing.title} />
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { type: "Пробный визит", price: "от 1 500 ₽", d: "Для первого знакомства: Пар или Синусоида", popular: false },
-              { type: "Живой Пар + Синусоида", price: "3 500 ₽", d: "Комплексная перезагрузка (~30 мин)", popular: true },
-              { type: "Абонемент 5 визитов", price: "12 500 ₽", d: "Выгоднее разовых посещений", popular: false },
-              { type: "Сертификат", price: "от 3 000 ₽", d: "Дарите своим близким РЕСУРС", popular: false }
-            ].map((item, i) => (
+            {t.pricing.items.map((item, i) => (
               <div key={i} className={`p-8 rounded-[40px] border flex flex-col justify-between ${
                 item.popular ? "bg-studio-ink text-white border-studio-ink scale-105 shadow-2xl" : "bg-studio-card border-studio-line"
               }`}>
                 <div>
-                  <div className="text-[10px] uppercase tracking-widest opacity-50 mb-4">{item.type}</div>
-                  <div className="text-3xl font-serif mb-4">{item.price}</div>
-                  <p className={`text-sm mb-8 ${item.popular ? "text-white/60" : "text-studio-muted"}`}>{item.d}</p>
+                  <div className="text-[10px] uppercase tracking-widest opacity-50 mb-4">{item.title}</div>
+                  <div className="text-3xl font-serif mb-4 italic">{item.price}</div>
+                  <p className={`text-sm mb-8 ${item.popular ? "text-white/60" : "text-studio-muted"}`}>{item.desc}</p>
                 </div>
                 <Button 
                   href={WHATSAPP_LINK}
@@ -489,7 +547,7 @@ export default function App() {
                   variant={item.popular ? "outline" : "secondary"}
                   className={`w-full !px-4 ${item.popular ? "!border-white !text-white hover:!bg-white hover:!text-studio-ink" : ""}`}
                 >
-                  Записаться
+                  {item.cta}
                 </Button>
               </div>
             ))}
@@ -498,9 +556,9 @@ export default function App() {
           {/* 17. Корпоративный блок */}
           <div className="mt-20 p-12 bg-studio-accent rounded-[50px] text-white overflow-hidden relative">
             <div className="relative z-10 max-w-2xl">
-              <h3 className="text-3xl md:text-5xl font-light mb-6">Корпоративная забота о сотрудниках</h3>
-              <p className="text-lg opacity-80 mb-10">Программы для компаний Альметьевска: сертификаты и абонементы как мягкий формат заботы о команде.</p>
-              <Button href={WHATSAPP_LINK} target="_blank" className="!bg-white !text-studio-accent">Обсудить формат</Button>
+              <h3 className="text-3xl md:text-5xl font-light mb-6">{t.pricing.corporate.title}</h3>
+              <p className="text-lg opacity-80 mb-10">{t.pricing.corporate.text}</p>
+              <Button href={WHATSAPP_LINK} target="_blank" className="!bg-white !text-studio-accent">{t.pricing.corporate.cta}</Button>
             </div>
             <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-10 translate-x-1/4">
                <Heart size={400} />
@@ -517,9 +575,9 @@ export default function App() {
                <ShieldCheck size={40} className="text-studio-accent" />
              </div>
              <div>
-               <h4 className="text-3xl font-serif mb-4">Когда стоит быть осторожнее</h4>
+               <h4 className="text-3xl font-serif italic mb-4">{t.safety.title}</h4>
                <p className="text-studio-muted leading-relaxed italic">
-                 Наши процедуры не являются медицинскими услугами. Если у вас есть хронические заболевания, острое состояние, высокая температура, беременность или сомнения — перед визитом лучше проконсультироваться с врачом.
+                 {t.safety.text}
                </p>
              </div>
           </div>
@@ -529,18 +587,12 @@ export default function App() {
       {/* 19. FAQ */}
       <section id="faq" className="py-32">
         <div className="studio-container">
-          <SectionHeading badge="Вопросы" title="Мы ответим на всё" />
+          <SectionHeading badge={t.faq.badge} title={t.faq.title} />
           <div className="max-w-4xl mx-auto space-y-4">
-            {[
-              { q: "Это медицинская процедура?", a: "Нет. «РЕСУРС» — wellness-студия телесного восстановления. Мы не ставим диагнозы и не заменяем лечение." },
-              { q: "Сколько длится Живой Пар?", a: "Основная часть — 15–20 минут. На первый визит лучше заложить 30–40 минут с учётом переодевания и отдыха." },
-              { q: "Что такое Синусоида?", a: "Это тренажер мягкого волнового движения, который помогает снять мышечное напряжение и скованность." },
-              { q: "Нужно ли что-то брать с собой?", a: "Нет. Мы обеспечиваем гостей всем необходимым: халаты, полотенца, тапочки и вкусный чай." },
-              { q: "Можно ли прийти при грыже или других болях?", a: "Наши методики мягкие, но при любых диагнозах позвоночника мы рекомендуем сначала получить одобрение вашего лечащего врача." }
-            ].map((item, i) => (
+            {t.faq.items.map((item, i) => (
               <details key={i} className="group bg-studio-card rounded-2xl border border-studio-line p-6 cursor-pointer overflow-hidden">
                 <summary className="flex justify-between items-center text-lg font-medium list-none">
-                  <span>{item.q}</span>
+                  <span className="font-serif italic pr-4">{item.q}</span>
                   <ChevronRight size={20} className="group-open:rotate-90 transition-transform duration-300" />
                 </summary>
                 <div className="pt-6 text-studio-muted leading-relaxed">
@@ -555,39 +607,20 @@ export default function App() {
       {/* 20. Отзывы */}
       <section id="reviews" className="py-32 bg-white">
         <div className="studio-container">
-          <SectionHeading badge="Отзывы" title="Что говорят наши гости" />
+          <SectionHeading badge={t.reviews.badge} title={t.reviews.title} />
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { 
-                name: "Елена", 
-                role: "Офисный сотрудник", 
-                text: "После Синусоиды спина просто 'задышала'. Невероятное ощущение легкости, которое сохраняется несколько дней. Очень рекомендую тем, кто весь день проводит за компьютером.",
-                rating: 5
-              },
-              { 
-                name: "Александр", 
-                role: "Спортсмен", 
-                text: "Живой Пар — идеальное завершение тренировочной недели. Мышцы восстанавливаются гораздо быстрее, а сон после процедуры просто младенческий.",
-                rating: 5
-              },
-              { 
-                name: "Марина", 
-                role: "Мама двоих детей", 
-                text: "Мой личный час тишины и заботы. Студия 'РЕСУРС' стала для меня местом, где можно выключить телефон и просто почувствовать свое тело. Заботливый персонал — это отдельная любовь.",
-                rating: 5
-              }
-            ].map((review, i) => (
+            {t.reviews.items.map((review, i) => (
               <div key={i} className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between">
                 <div>
                    <div className="flex gap-1 mb-6">
-                     {[...Array(review.rating)].map((_, i) => (
+                     {[...Array(5)].map((_, i) => (
                        <Heart key={i} size={14} className="fill-studio-accent text-studio-accent" />
                      ))}
                    </div>
                    <p className="text-studio-ink text-sm leading-relaxed italic mb-8">"{review.text}"</p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-studio-accent/20 flex items-center justify-center text-studio-accent font-serif font-bold">
+                  <div className="w-10 h-10 rounded-full bg-studio-accent/20 flex items-center justify-center text-studio-accent font-serif font-bold italic">
                     {review.name[0]}
                   </div>
                   <div>
@@ -606,30 +639,30 @@ export default function App() {
         <div className="studio-container">
           <div className="grid lg:grid-cols-2 gap-32">
             <div>
-              <SectionHeading badge="Локация" title="Ждём в гости" />
+              <SectionHeading badge={t.contacts.badge} title={t.contacts.title} />
               <div className="space-y-12">
                 <div className="flex gap-8">
                   <MapPin className="text-studio-accent" size={32} />
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">Адрес</div>
-                    <div className="text-2xl">Альметьевск, ул. Ленина, д. 100</div>
-                    <p className="mt-2 text-studio-muted italic font-light">Удобная парковка всегда свободна</p>
+                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.contacts.addressLabel}</div>
+                    <div className="text-2xl font-serif italic">{t.contacts.addressValue}</div>
+                    <p className="mt-2 text-studio-muted italic font-light">{t.contacts.parkingNote}</p>
                   </div>
                 </div>
                 <div className="flex gap-8">
                   <Clock className="text-studio-accent" size={32} />
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">График</div>
-                    <div className="text-2xl">Ежедневно: 09:00 — 21:00</div>
-                    <p className="mt-2 text-studio-muted italic font-light">По предварительной записи</p>
+                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.contacts.hoursLabel}</div>
+                    <div className="text-2xl font-serif italic">{t.contacts.hoursValue}</div>
+                    <p className="mt-2 text-studio-muted italic font-light">{t.contacts.bookingNote}</p>
                   </div>
                 </div>
                 <div className="flex gap-8">
                   <Phone className="text-studio-accent" size={32} />
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">Связь</div>
-                    <a href="tel:+79000000000" className="text-2xl block hover:text-studio-accent transition-colors">+7 (900) 000-00-00</a>
-                    <a href={WHATSAPP_LINK} className="mt-3 text-studio-accent font-bold uppercase tracking-widest text-[10px] border-b border-studio-accent">Написать в WhatsApp</a>
+                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.contacts.phoneLabel}</div>
+                    <a href="tel:+79000000000" className="text-2xl font-serif italic block hover:text-studio-accent transition-colors">+7 (900) 000-00-00</a>
+                    <a href={WHATSAPP_LINK} target="_blank" className="mt-3 text-studio-accent font-bold uppercase tracking-widest text-[10px] border-b border-studio-accent inline-block">{t.contacts.whatsappCta}</a>
                   </div>
                 </div>
               </div>
@@ -640,10 +673,13 @@ export default function App() {
                   src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=2566&auto=format&fit=crop" 
                   alt="Map Location" 
                   className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <div className="absolute inset-0 bg-studio-ink/20 group-hover:bg-transparent transition-all"></div>
-              <Button href="#" className="absolute bottom-10 right-10 !bg-white !text-studio-ink shadow-2xl">Открыть маршрут</Button>
+              <Button href={MAP_LINK} target="_blank" className="absolute bottom-10 right-10 !bg-white !text-studio-ink shadow-2xl flex items-center gap-2">
+                {t.contacts.routeCta} <ExternalLink size={14} />
+              </Button>
             </div>
           </div>
         </div>
@@ -654,37 +690,37 @@ export default function App() {
         <div className="studio-container flex flex-col md:flex-row justify-between items-start gap-12">
           <div className="max-w-xs">
             <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 rounded-full bg-studio-ink flex items-center justify-center text-white">
+              <div className="w-8 h-8 rounded-full bg-studio-accent flex items-center justify-center text-white">
                 <span className="font-serif font-bold text-lg">Р</span>
               </div>
-              <span className="font-serif text-xl tracking-widest font-medium uppercase text-studio-ink">Ресурс</span>
+              <span className="font-serif text-xl tracking-widest font-medium uppercase text-studio-ink">{t.common.title}</span>
             </div>
             <p className="text-xs text-studio-muted leading-relaxed uppercase tracking-widest font-bold">
-              Wellness-студия телесного восстановления в Альметьевске
+              {t.footer.description}
             </p>
           </div>
           
-          <div className="grid grid-cols-2 gap-20">
+          <div className="grid grid-cols-2 gap-10 md:gap-20">
             <div className="space-y-4">
-              <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-studio-muted mb-4">Навигация</div>
-              <a href="#services" className="block text-sm hover:text-studio-accent">Услуги</a>
-              <a href="#audience" className="block text-sm hover:text-studio-accent">Кому подходит</a>
-              <a href="#pricing" className="block text-sm hover:text-studio-accent">Цены</a>
+              <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-studio-muted mb-4">{t.footer.navLabel}</div>
+              <a href="#services" className="block text-sm hover:text-studio-accent transition-colors">{t.nav.services}</a>
+              <a href="#audience" className="block text-sm hover:text-studio-accent transition-colors">{t.nav.audience}</a>
+              <a href="#pricing" className="block text-sm hover:text-studio-accent transition-colors">{t.nav.pricing}</a>
             </div>
             <div className="space-y-4">
-               <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-studio-muted mb-4">Клиентам</div>
-              <a href="#faq" className="block text-sm hover:text-studio-accent">FAQ</a>
-              <a href="#contacts" className="block text-sm hover:text-studio-accent">Контакты</a>
-              <a href={WHATSAPP_LINK} className="block text-sm hover:text-studio-accent">WhatsApp</a>
+               <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-studio-muted mb-4">{t.footer.clientsLabel}</div>
+              <a href="#faq" className="block text-sm hover:text-studio-accent transition-colors">{t.nav.faq}</a>
+              <a href="#contacts" className="block text-sm hover:text-studio-accent transition-colors">{t.nav.contacts}</a>
+              <a href={WHATSAPP_LINK} target="_blank" className="block text-sm hover:text-studio-accent transition-colors">WhatsApp</a>
             </div>
           </div>
         </div>
         
         <div className="studio-container mt-20 pt-8 border-t border-studio-line text-center">
             <p className="text-[10px] text-studio-muted/40 max-w-3xl mx-auto leading-loose italic">
-              Информация на сайте не является медицинской рекомендацией. Услуги студии «РЕСУРС» не являются медицинскими услугами, не предполагают диагностику и лечение заболеваний и не заменяют консультацию врача. Возможны индивидуальные противопоказания.
+              {t.footer.legal}
             </p>
-            <p className="mt-8 text-[9px] uppercase tracking-widest text-studio-muted">© 2026 РЕСУРС студия телесного восстановления</p>
+            <p className="mt-8 text-[9px] uppercase tracking-widest text-studio-muted">© 2026 {t.footer.copyright}</p>
         </div>
       </footer>
 
@@ -717,8 +753,8 @@ export default function App() {
                      <Bot size={24} />
                    </div>
                    <div>
-                     <div className="text-sm font-bold uppercase tracking-widest">Ассистент</div>
-                     <div className="text-[10px] opacity-60">Спокойно отвечу на вопросы</div>
+                     <div className="text-sm font-bold uppercase tracking-widest">{t.assistant.label}</div>
+                     <div className="text-[10px] opacity-60 font-serif italic">{t.assistant.subtitle}</div>
                    </div>
                 </div>
                 <button onClick={() => setIsAiOpen(false)}><X size={20} /></button>
@@ -738,7 +774,7 @@ export default function App() {
                     </div>
                     <div className={`p-4 rounded-2xl shadow-sm text-sm leading-relaxed whitespace-pre-wrap ${
                       msg.role === 'assistant' 
-                        ? 'bg-white rounded-tl-none' 
+                        ? 'bg-white rounded-tl-none font-light italic' 
                         : 'bg-studio-accent text-white rounded-tr-none'
                     }`}>
                       {msg.text || (msg.role === 'assistant' && isTyping && !msg.text ? <Loader2 size={16} className="animate-spin" /> : '')}
@@ -748,18 +784,11 @@ export default function App() {
 
                 {!isTyping && messages.length <= 2 && (
                   <div className="flex flex-wrap gap-2">
-                    {[
-                      "Что выбрать впервые?",
-                      "Что такое Живой Пар?",
-                      "Сколько длится визит?",
-                      "Есть противопоказания?",
-                      "Сколько стоит?",
-                      "Записаться в WhatsApp"
-                    ].map((chip) => (
+                    {t.assistant.chips.map((chip) => (
                       <button 
                         key={chip} 
                         onClick={() => handleSendMessage(chip)}
-                        className="px-4 py-2 bg-white border border-studio-line rounded-full text-xs hover:border-studio-accent transition-colors shadow-sm"
+                        className="px-4 py-2 bg-white border border-studio-line rounded-full text-[10px] uppercase tracking-widest hover:border-studio-accent transition-colors shadow-sm font-bold"
                       >
                         {chip}
                       </button>
@@ -794,8 +823,8 @@ export default function App() {
                     type="text" 
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Ваш вопрос..." 
-                    className="flex-1 bg-studio-bg border-none rounded-full px-5 py-3 text-sm focus:ring-1 focus:ring-studio-accent"
+                    placeholder={t.assistant.inputPlaceholder} 
+                    className="flex-1 bg-studio-bg border-none rounded-full px-5 py-3 text-sm focus:ring-1 focus:ring-studio-accent font-light"
                     disabled={isTyping}
                   />
                   <button 
@@ -807,7 +836,7 @@ export default function App() {
                   </button>
                 </div>
                 <p className="mt-4 text-[9px] text-center text-studio-muted opacity-50 uppercase tracking-[0.2em] font-bold">
-                  Ассистент не дает медицинских советов
+                  {t.assistant.disclaimer}
                 </p>
               </form>
             </motion.div>
