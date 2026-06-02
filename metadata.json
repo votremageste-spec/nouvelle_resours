@@ -2,5 +2,7 @@
   "name": "РЕСУРС — Студия восстановления",
   "description": "Wellness-студия телесного восстановления в Альметьевске. Мягкое расслабление через Живой Пар, Синусоиду и профессиональный массаж.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
