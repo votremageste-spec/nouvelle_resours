@@ -22,12 +22,30 @@ import {
   Globe,
   ExternalLink,
   Zap,
-  Coffee
+  Coffee,
+  Sparkles,
+  Gift,
+  Compass,
+  MessageSquare
 } from "lucide-react";
 import { translations, Language } from "./locales";
 
-const WHATSAPP_LINK = "https://wa.me/79000000000";
-const MAP_LINK = "https://yandex.ru/maps/-/CCU8v8V8XD"; // Example real route
+const WHATSAPP_LINK = "https://wa.me/79172343434";
+const TELEGRAM_LINK = "https://t.me/resours_studio_bot";
+const VK_LINK = "https://vk.com/";
+const MAKS_LINK = "https://t.me/resours_studio_bot?start=maks"; // Linked Maks assistant
+const MAP_LINK = "https://yandex.ru/maps/?text=Альметьевск,+ул.+Чернышевского+31";
+
+// Analytics Event Tracking Helper
+const trackEvent = (eventName: string, data?: any) => {
+  console.log(`[Analytics Event] ${eventName}`, data || '');
+  if (typeof (window as any).ym !== 'undefined') {
+    (window as any).ym(99999999, 'reachGoal', eventName, data);
+  }
+  if (typeof (window as any).gtag !== 'undefined') {
+    (window as any).gtag('event', eventName, data);
+  }
+};
 
 // --- Components ---
 
@@ -39,7 +57,7 @@ const Button = ({
   href,
   target
 }: any) => {
-  const baseStyles = "px-8 py-4 rounded-full font-sans text-[11px] uppercase tracking-[0.2em] font-bold transition-all duration-300 flex items-center justify-center gap-2 group";
+  const baseStyles = "px-8 py-4 rounded-full font-sans text-[11px] uppercase tracking-[0.2em] font-bold transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer min-h-[48px]";
   const variants: any = {
     primary: "bg-studio-ink text-white hover:bg-studio-accent",
     secondary: "border border-studio-ink/20 text-studio-ink hover:bg-studio-ink hover:text-white",
@@ -73,10 +91,12 @@ const SectionHeading = ({ title, subtitle, badge }: any) => (
   </div>
 );
 
-// --- Sections ---
-
 export default function App() {
   const [lang, setLang] = useState<Language>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    if (urlLang === 'ru' || urlLang === 'tt') return urlLang as Language;
+    
     const saved = localStorage.getItem('resurs_lang');
     return (saved as Language) || 'ru';
   });
@@ -86,7 +106,39 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('resurs_lang', lang);
     document.documentElement.lang = lang;
+    
+    // Sync URL without reloading
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('lang') !== lang) {
+      params.set('lang', lang);
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, '', newUrl);
+    }
+
+    // Dynamic SEO Alternate tags
+    let linkRu = document.querySelector('link[hreflang="ru"]');
+    if (!linkRu) {
+      linkRu = document.createElement('link');
+      linkRu.setAttribute('rel', 'alternate');
+      linkRu.setAttribute('hreflang', 'ru');
+      document.head.appendChild(linkRu);
+    }
+    linkRu.setAttribute('href', `${window.location.origin}${window.location.pathname}?lang=ru`);
+
+    let linkTt = document.querySelector('link[hreflang="tt"]');
+    if (!linkTt) {
+      linkTt = document.createElement('link');
+      linkTt.setAttribute('rel', 'alternate');
+      linkTt.setAttribute('hreflang', 'tt');
+      document.head.appendChild(linkTt);
+    }
+    linkTt.setAttribute('href', `${window.location.origin}${window.location.pathname}?lang=tt`);
   }, [lang]);
+
+  const changeLanguage = (newLang: Language) => {
+    setLang(newLang);
+    trackEvent(`switch_language_${newLang}`);
+  };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -105,6 +157,16 @@ export default function App() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Sync welcome message on language change
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].role === 'assistant') {
+        return [{ id: '1', role: 'assistant', text: t.assistant.welcome }];
+      }
+      return prev;
+    });
+  }, [lang, t.assistant.welcome]);
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -159,9 +221,9 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen selection:bg-studio-accent/30">
+    <div className="min-h-screen selection:bg-studio-accent/30 bg-studio-bg text-studio-ink">
       
-      {/* 5. Шапка и навигация */}
+      {/* 1. Header / шапка и навигация */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
         scrolled ? "bg-studio-bg/90 backdrop-blur-xl py-3 border-b border-studio-line" : "bg-transparent py-6"
       }`}>
@@ -184,24 +246,31 @@ export default function App() {
             
             <div className="flex items-center gap-2 border-l border-studio-line pl-6 ml-2">
               <button 
-                onClick={() => setLang('ru')}
-                className={`transition-colors ${lang === 'ru' ? 'text-studio-accent' : 'hover:text-studio-accent'}`}
+                onClick={() => changeLanguage('ru')}
+                className={`transition-colors cursor-pointer ${lang === 'ru' ? 'text-studio-accent' : 'hover:text-studio-accent'}`}
               >
                 RU
               </button>
               <span className="opacity-20 italic">|</span>
               <button 
-                onClick={() => setLang('tt')}
-                className={`transition-colors ${lang === 'tt' ? 'text-studio-accent' : 'hover:text-studio-accent'}`}
+                onClick={() => changeLanguage('tt')}
+                className={`transition-colors cursor-pointer ${lang === 'tt' ? 'text-studio-accent' : 'hover:text-studio-accent'}`}
               >
                 TT
               </button>
             </div>
             
-            <Button href={WHATSAPP_LINK} target="_blank" className="!px-6 !py-2.5">{t.nav.book}</Button>
+            <Button 
+              href={WHATSAPP_LINK} 
+              target="_blank" 
+              onClick={() => trackEvent('click_whatsapp_header')}
+              className="!px-6 !py-2.5"
+            >
+              {t.nav.book}
+            </Button>
           </div>
 
-          <button className="lg:hidden text-studio-ink" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <button className="lg:hidden text-studio-ink cursor-pointer" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
@@ -225,24 +294,30 @@ export default function App() {
                 <a href="#contacts" onClick={() => setMobileMenuOpen(false)}>{t.nav.contacts}</a>
                 
                 <div className="flex justify-center items-center gap-4 py-2 border-y border-studio-line">
-                  <button onClick={() => { setLang('ru'); setMobileMenuOpen(false); }} className={lang === 'ru' ? 'text-studio-accent' : ''}>RU</button>
+                  <button onClick={() => { changeLanguage('ru'); setMobileMenuOpen(false); }} className={`cursor-pointer ${lang === 'ru' ? 'text-studio-accent' : ''}`}>RU</button>
                   <span className="opacity-20 italic">|</span>
-                  <button onClick={() => { setLang('tt'); setMobileMenuOpen(false); }} className={lang === 'tt' ? 'text-studio-accent' : ''}>TT</button>
+                  <button onClick={() => { changeLanguage('tt'); setMobileMenuOpen(false); }} className={`cursor-pointer ${lang === 'tt' ? 'text-studio-accent' : ''}`}>TT</button>
                 </div>
                 
-                <Button href={WHATSAPP_LINK} target="_blank">{t.nav.book}</Button>
+                <Button 
+                  href={WHATSAPP_LINK} 
+                  target="_blank"
+                  onClick={() => { trackEvent('click_whatsapp_header'); setMobileMenuOpen(false); }}
+                >
+                  {t.nav.book}
+                </Button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </nav>
 
-      {/* 6. Первый экран */}
+      {/* 2. Hero: «Верни себе ресурс» */}
       <header className="relative min-h-screen flex items-center py-24 md:py-32 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=2670&auto=format&fit=crop" 
-            alt="Wellness atmosphere" 
+            alt="" 
             className="w-full h-full object-cover grayscale-[20%]"
             referrerPolicy="no-referrer"
           />
@@ -275,15 +350,24 @@ export default function App() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
-              <Button href={WHATSAPP_LINK} target="_blank" className="!px-10 !py-5 shadow-2xl">
+              <Button 
+                href={WHATSAPP_LINK} 
+                target="_blank" 
+                onClick={() => trackEvent('click_whatsapp_hero')}
+                className="!px-10 !py-5 shadow-2xl"
+              >
                 {t.hero.cta}
               </Button>
-              <Button onClick={() => setIsAiOpen(true)} variant="secondary" className="!px-10 !py-5">
+              <Button 
+                onClick={() => { trackEvent('click_ai_helper'); setIsAiOpen(true); }} 
+                variant="secondary" 
+                className="!px-10 !py-5"
+              >
                 {t.hero.ctaAssistant}
               </Button>
             </div>
             
-            {/* 6.3 Быстрые факты */}
+            {/* 3. Быстрые факты */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 lg:mt-24">
               {[
                 { icon: Waves, text: t.facts[0] },
@@ -301,7 +385,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* 8. Блок «Чем мы отличаемся» */}
+      {/* 4. Блок «Чем мы отличаемся» */}
       <section className="py-24 bg-studio-card border-b border-studio-line">
         <div className="studio-container">
           <div className="max-w-5xl">
@@ -315,7 +399,215 @@ export default function App() {
         </div>
       </section>
 
-      {/* 5. Главный продающий блок: Комплекс */}
+      {/* 5. Блок «Три пути к восстановлению» */}
+      <section id="services" className="py-32 bg-white">
+        <div className="studio-container">
+          <SectionHeading 
+            badge={t.threePaths.badge} 
+            title={t.threePaths.title} 
+            subtitle={t.threePaths.subtitle} 
+          />
+          <div className="grid lg:grid-cols-3 gap-10">
+            {/* Карточка 1: Живой Пар */}
+            <div 
+              onClick={() => trackEvent('click_service_steam')}
+              className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between hover:border-studio-accent transition-all duration-500 cursor-pointer group"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-studio-accent/10 flex items-center justify-center text-studio-accent mb-8 group-hover:bg-studio-accent group-hover:text-white transition-colors">
+                  <Waves size={24} />
+                </div>
+                <h3 className="text-2xl font-serif italic mb-6">{t.threePaths.steam.title}</h3>
+                <p className="text-studio-muted text-sm leading-relaxed font-light">{t.threePaths.steam.text}</p>
+              </div>
+              <div className="mt-10 pt-6 border-t border-studio-line flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-studio-accent">
+                <span>{t.common.learnMore}</span>
+                <ChevronRight size={14} />
+              </div>
+            </div>
+
+            {/* Карточка 2: Синусоида */}
+            <div 
+              onClick={() => trackEvent('click_service_sinusoid')}
+              className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between hover:border-studio-accent transition-all duration-500 cursor-pointer group"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-studio-accent/10 flex items-center justify-center text-studio-accent mb-8 group-hover:bg-studio-accent group-hover:text-white transition-colors">
+                  <Wind size={24} />
+                </div>
+                <h3 className="text-2xl font-serif italic mb-6">{t.threePaths.sinus.title}</h3>
+                <p className="text-studio-muted text-sm leading-relaxed font-light whitespace-pre-wrap">{t.threePaths.sinus.text}</p>
+              </div>
+              <div className="mt-10 pt-6 border-t border-studio-line flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-studio-accent">
+                <span>{t.common.learnMore}</span>
+                <ChevronRight size={14} />
+              </div>
+            </div>
+
+            {/* Карточка 3: Массаж */}
+            <div 
+              onClick={() => trackEvent('click_service_massage')}
+              className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between hover:border-studio-accent transition-all duration-500 cursor-pointer group"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-studio-accent/10 flex items-center justify-center text-studio-accent mb-8 group-hover:bg-studio-accent group-hover:text-white transition-colors">
+                  <Hand size={24} />
+                </div>
+                <h3 className="text-2xl font-serif italic mb-6">{t.threePaths.massage.title}</h3>
+                <p className="text-studio-muted text-sm leading-relaxed font-light">{t.threePaths.massage.text}</p>
+              </div>
+              <div className="mt-10 pt-6 border-t border-studio-line flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-studio-accent">
+                <span>{t.common.learnMore}</span>
+                <ChevronRight size={14} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Блок «Живой Пар» */}
+      <section className="py-24 bg-studio-bg border-t border-studio-line">
+        <div className="studio-container">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="rounded-[60px] overflow-hidden aspect-[4/3] bg-studio-ink/10 shadow-lg relative group">
+              <img 
+                src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=2670&auto=format&fit=crop" 
+                alt="Living Steam" 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-studio-ink/40 to-transparent"></div>
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <Waves className="text-studio-accent" size={32} />
+                <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-studio-muted">Wellness капсула</span>
+              </div>
+              <h3 className="text-4xl md:text-5xl font-light mb-8">{t.services.steam.title}</h3>
+              <p className="text-lg font-light text-studio-muted leading-relaxed mb-8">
+                {t.services.steam.p}
+              </p>
+              <div className="grid grid-cols-3 gap-6 mb-10 p-6 bg-white rounded-3xl border border-studio-line">
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
+                  <div className="text-sm font-semibold text-studio-accent">{t.services.steam.time}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">Температура</div>
+                  <div className="text-sm font-semibold text-studio-accent">{t.services.steam.temp}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">Ощущение</div>
+                  <div className="text-sm font-semibold text-studio-accent capitalize">{t.services.steam.feeling || "тепло"}</div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <Button 
+                  variant="primary" 
+                  href={WHATSAPP_LINK} 
+                  target="_blank"
+                  onClick={() => trackEvent('click_service_steam')}
+                >
+                  {t.services.steam.cta}
+                </Button>
+                <p className="text-[9px] text-studio-muted opacity-60 uppercase tracking-wider">{t.services.steam.disclaimer}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Блок «Синусоида» */}
+      <section className="py-24 bg-white border-y border-studio-line">
+        <div className="studio-container">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="order-2 md:order-1">
+              <div className="flex items-center gap-3 mb-6">
+                <Wind className="text-studio-accent" size={32} />
+                <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-studio-muted">Волновое расслабление</span>
+              </div>
+              <h3 className="text-4xl md:text-5xl font-light mb-8">{t.services.sinus.title}</h3>
+              <p className="text-lg font-light text-studio-muted leading-relaxed mb-8">
+                {t.services.sinus.p}
+              </p>
+              <div className="grid grid-cols-2 gap-6 mb-10 p-6 bg-studio-bg rounded-3xl border border-studio-line">
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
+                  <div className="text-sm font-semibold text-studio-accent">{t.services.sinus.time}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">Ощущение после</div>
+                  <div className="text-sm font-semibold text-studio-accent">{t.services.sinus.effect}</div>
+                </div>
+              </div>
+              <Button 
+                variant="secondary" 
+                href={WHATSAPP_LINK} 
+                target="_blank"
+                onClick={() => trackEvent('click_service_sinusoid')}
+              >
+                {t.services.sinus.cta}
+              </Button>
+            </div>
+            <div className="order-1 md:order-2 rounded-[60px] overflow-hidden aspect-[4/3] bg-studio-ink/10 shadow-lg relative group">
+              <img 
+                src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=2670&auto=format&fit=crop" 
+                alt="Sinusoid" 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-studio-ink/40 to-transparent"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. Блок «Массаж» */}
+      <section className="py-24 bg-studio-bg border-b border-studio-line">
+        <div className="studio-container">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="rounded-[60px] overflow-hidden aspect-[4/3] bg-studio-ink/10 shadow-lg relative group">
+              <img 
+                src="https://images.unsplash.com/photo-1600334129128-685c5582fd35?q=80&w=2670&auto=format&fit=crop" 
+                alt="Massage" 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-studio-ink/40 to-transparent"></div>
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <Hand className="text-studio-accent" size={32} />
+                <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-studio-muted">Ручной массаж</span>
+              </div>
+              <h3 className="text-4xl md:text-5xl font-light mb-8">{t.services.massage.title}</h3>
+              <p className="text-lg font-light text-studio-muted leading-relaxed mb-8">
+                {t.services.massage.p}
+              </p>
+              <div className="grid grid-cols-2 gap-6 mb-10 p-6 bg-white rounded-3xl border border-studio-line">
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
+                  <div className="text-sm font-semibold text-studio-accent">{t.services.massage.time}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">Техника</div>
+                  <div className="text-sm font-semibold text-studio-accent">{t.services.massage.technique}</div>
+                </div>
+              </div>
+              <Button 
+                variant="secondary" 
+                href={WHATSAPP_LINK} 
+                target="_blank"
+                onClick={() => trackEvent('click_service_massage')}
+              >
+                {t.services.massage.cta}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. Главный комплекс: «Перезагрузка тела за один визит» */}
       <section className="py-24 bg-studio-ink text-white">
         <div className="studio-container">
           <div className="grid lg:grid-cols-2 gap-20 items-center">
@@ -323,30 +615,41 @@ export default function App() {
               <span className="text-studio-accent text-[11px] uppercase tracking-[0.4em] font-bold mb-6 block">{t.recharge.badge}</span>
               <h2 className="text-5xl md:text-7xl font-light mb-8">{t.recharge.title}</h2>
               <p className="text-xl text-white/70 font-light leading-relaxed mb-12">
-                {t.recharge.p1} <span className="text-white font-medium underline underline-offset-8 font-serif italic text-lg">{t.services.steam.title}</span> {t.recharge.p2} <span className="text-white font-medium underline underline-offset-8 font-serif italic text-lg">{t.services.sinus.title}</span> {t.recharge.p3}
+                Сначала мягкий <span className="text-white font-medium underline underline-offset-8 font-serif italic text-lg">{t.services.steam.title}</span> помогает телу расслабиться и согреться. Затем <span className="text-white font-medium underline underline-offset-8 font-serif italic text-lg">{t.services.sinus.title}</span> добавляет плавное движение, чтобы вернуть ощущение лёгкости.
               </p>
               
-              <div className="grid grid-cols-2 gap-10 mb-12">
-                <div className="space-y-2">
-                  <div className="text-[10px] uppercase tracking-widest opacity-50">{t.recharge.activeTimeLabel}</div>
-                  <div className="text-3xl font-serif italic text-studio-accent">{t.recharge.activeTimeValue}</div>
+              <div className="grid grid-cols-3 gap-6 mb-12">
+                <div className="space-y-1">
+                  <div className="text-[9px] uppercase tracking-widest opacity-50">{t.recharge.activeTimeLabel}</div>
+                  <div className="text-2xl font-serif italic text-studio-accent">{t.recharge.activeTimeValue}</div>
                 </div>
-                <div className="space-y-2">
-                  <div className="text-[10px] uppercase tracking-widest opacity-50">{t.recharge.fullVisitLabel}</div>
-                  <div className="text-3xl font-serif italic text-studio-accent">{t.recharge.fullVisitValue}</div>
+                <div className="space-y-1">
+                  <div className="text-[9px] uppercase tracking-widest opacity-50">{t.recharge.fullVisitLabel}</div>
+                  <div className="text-2xl font-serif italic text-studio-accent">{t.recharge.fullVisitValue}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[9px] uppercase tracking-widest opacity-50">Наш Формат</div>
+                  <div className="text-xs font-semibold text-studio-accent uppercase tracking-wider">Пар + Синусоида</div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <Button href={WHATSAPP_LINK} className="w-full sm:w-auto !bg-studio-accent hover:!bg-white hover:text-studio-ink">{t.recharge.cta}</Button>
-                <p className="text-[10px] opacity-40 uppercase tracking-widest">{t.common.nonMedical}</p>
+                <Button 
+                  href={WHATSAPP_LINK} 
+                  target="_blank"
+                  onClick={() => trackEvent('click_complex')}
+                  className="w-full sm:w-auto !bg-studio-accent hover:!bg-white hover:text-studio-ink"
+                >
+                  {t.recharge.cta}
+                </Button>
+                <p className="text-[9px] opacity-40 uppercase tracking-widest">{t.common.nonMedical}</p>
               </div>
             </div>
             <div className="relative">
                <div className="aspect-square rounded-[60px] overflow-hidden">
                  <img 
                   src="https://images.unsplash.com/photo-1591343395902-1adcb454c7e7?q=80&w=2574&auto=format&fit=crop" 
-                  alt="РЕСУРС" 
+                  alt="" 
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                  />
@@ -359,27 +662,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 6. Важная рамка (Prominent Important Frame) */}
-      <section className="py-12 bg-studio-bg">
-        <div className="studio-container">
-          <div className="p-10 md:p-16 bg-studio-accent/5 border-2 border-dashed border-studio-accent/20 rounded-[50px] relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-studio-accent/5 rounded-bl-full"></div>
-            <div className="relative z-10 max-w-4xl mx-auto flex flex-col md:flex-row gap-10 items-center">
-              <div className="w-20 h-20 rounded-full bg-studio-accent text-white flex items-center justify-center shrink-0">
-                <Zap size={36} />
-              </div>
-              <div>
-                <h4 className="text-2xl md:text-3xl font-serif italic mb-4 text-studio-ink">{t.importantFrame.title}</h4>
-                <p className="text-studio-muted leading-relaxed">
-                  {t.importantFrame.text}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. Блок «Для кого РЕСУРС» */}
+      {/* 10. Кому подходит */}
       <section id="audience" className="py-32 bg-white">
         <div className="studio-container">
           <SectionHeading 
@@ -406,106 +689,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 8-12. Услуги */}
-      <section id="services" className="py-32">
-        <div className="studio-container">
-          <SectionHeading badge={t.services.badge} title={t.services.title} />
-          
-          <div className="grid gap-32">
-            {/* Живой Пар */}
-            <div className="grid md:grid-cols-2 gap-16 items-center">
-              <div className="rounded-[60px] overflow-hidden aspect-[4/3] bg-studio-ink/10">
-                <img 
-                  src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=2670&auto=format&fit=crop" 
-                  alt="Living Steam" 
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div>
-                <Waves className="text-studio-accent mb-8" size={40} />
-                <h3 className="text-4xl md:text-6xl font-light mb-8">{t.services.steam.title}</h3>
-                <p className="text-xl font-light text-studio-muted leading-relaxed mb-8">
-                  {t.services.steam.p}
-                </p>
-                <div className="flex gap-10 mb-10">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
-                    <div className="text-2xl font-serif">{t.services.steam.time}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.taglineLabel}</div>
-                    <div className="text-2xl font-serif">{t.services.steam.temp}</div>
-                  </div>
-                </div>
-                <Button variant="secondary" href={WHATSAPP_LINK} target="_blank">{t.services.steam.cta}</Button>
-              </div>
-            </div>
-
-            {/* Синусоида */}
-            <div className="grid md:grid-cols-2 gap-16 items-center">
-              <div className="order-2 md:order-1">
-                <Wind className="text-studio-accent mb-8" size={40} />
-                <h3 className="text-4xl md:text-6xl font-light mb-8">{t.services.sinus.title}</h3>
-                <p className="text-xl font-light text-studio-muted leading-relaxed mb-8">
-                  {t.services.sinus.p}
-                </p>
-                <div className="flex gap-10 mb-10">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
-                    <div className="text-2xl font-serif">{t.services.sinus.time}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.effectLabel}</div>
-                    <div className="text-2xl font-serif">{t.services.sinus.effect}</div>
-                  </div>
-                </div>
-                <Button variant="secondary" href={WHATSAPP_LINK} target="_blank">{t.services.sinus.cta}</Button>
-              </div>
-              <div className="order-1 md:order-2 rounded-[60px] overflow-hidden aspect-[4/3] bg-studio-ink/10">
-                <img 
-                  src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=2670&auto=format&fit=crop" 
-                  alt="Sinusoid" 
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-            </div>
-
-            {/* Массаж */}
-            <div className="grid md:grid-cols-2 gap-16 items-center">
-              <div className="rounded-[60px] overflow-hidden aspect-[4/3] bg-studio-ink/10">
-                <img 
-                  src="https://images.unsplash.com/photo-1600334129128-685c5582fd35?q=80&w=2670&auto=format&fit=crop" 
-                  alt="Massage" 
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div>
-                <Hand className="text-studio-accent mb-8" size={40} />
-                <h3 className="text-4xl md:text-6xl font-light mb-8">{t.services.massage.title}</h3>
-                <p className="text-xl font-light text-studio-muted leading-relaxed mb-8">
-                  {t.services.massage.p}
-                </p>
-                <div className="flex gap-10 mb-10">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
-                    <div className="text-2xl font-serif">{t.services.massage.time}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.common.techniqueLabel}</div>
-                    <div className="text-2xl font-serif">{t.services.massage.technique}</div>
-                  </div>
-                </div>
-                <Button variant="secondary" href={WHATSAPP_LINK} target="_blank">{t.services.massage.cta}</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 14. Как проходит первый визит */}
+      {/* 11. Как проходит первый визит */}
       <section id="process" className="py-32 bg-studio-card border-y border-studio-line">
         <div className="studio-container">
           <SectionHeading badge={t.process.badge} title={t.process.title} />
@@ -526,24 +710,40 @@ export default function App() {
         </div>
       </section>
 
-      {/* 15-16. Форматы и цены */}
+      {/* 12. Форматы посещения / цены */}
       <section id="pricing" className="py-32 bg-white">
         <div className="studio-container">
-          <SectionHeading badge={t.pricing.badge} title={t.pricing.title} />
+          <SectionHeading badge={t.pricing.badge} title={t.pricing.title} subtitle={t.pricing.subtitle} />
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-3 gap-8 items-stretch mb-12">
             {t.pricing.items.map((item, i) => (
-              <div key={i} className={`p-8 rounded-[40px] border flex flex-col justify-between ${
-                item.popular ? "bg-studio-ink text-white border-studio-ink scale-105 shadow-2xl" : "bg-studio-card border-studio-line"
+              <div key={i} className={`p-10 rounded-[40px] border flex flex-col justify-between transition-all duration-500 hover:shadow-xl ${
+                item.popular ? "bg-studio-ink text-white border-studio-ink scale-105 shadow-2xl relative overflow-hidden" : "bg-studio-card border-studio-line"
               }`}>
+                {item.badge && (
+                  <span className="absolute top-6 right-6 px-3 py-1 bg-studio-accent text-white text-[9px] uppercase tracking-widest font-bold rounded-full">
+                    {item.badge}
+                  </span>
+                )}
                 <div>
                   <div className="text-[10px] uppercase tracking-widest opacity-50 mb-4">{item.title}</div>
-                  <div className="text-3xl font-serif mb-4 italic">{item.price}</div>
-                  <p className={`text-sm mb-8 ${item.popular ? "text-white/60" : "text-studio-muted"}`}>{item.desc}</p>
+                  <div className="space-y-1 mb-6">
+                    <div className="text-4xl font-serif italic">{item.price} <span className="text-xs uppercase tracking-widest opacity-50">{item.optionLabel}</span></div>
+                    <div className="text-2xl font-serif italic opacity-80">{item.priceOption} <span className="text-[10px] uppercase tracking-widest opacity-40">{item.optionLabelTwo}</span></div>
+                  </div>
+                  <p className={`text-sm mb-6 font-medium ${item.popular ? "text-white/90" : "text-studio-ink/95"}`}>{item.desc}</p>
+                  <p className={`text-xs mb-8 italic leading-relaxed ${item.popular ? "text-white/60" : "text-studio-muted"}`}>{item.details}</p>
+                  
+                  {item.benefit && (
+                    <div className={`p-4 rounded-2xl text-xs mb-8 ${item.popular ? "bg-white/10 text-studio-accent" : "bg-white border border-studio-line text-studio-ink font-semibold"}`}>
+                      {item.benefit}
+                    </div>
+                  )}
                 </div>
                 <Button 
                   href={WHATSAPP_LINK}
                   target="_blank"
+                  onClick={() => trackEvent(`click_pricing_${i}`)}
                   variant={item.popular ? "outline" : "secondary"}
                   className={`w-full !px-4 ${item.popular ? "!border-white !text-white hover:!bg-white hover:!text-studio-ink" : ""}`}
                 >
@@ -552,60 +752,89 @@ export default function App() {
               </div>
             ))}
           </div>
-          
-          {/* 17. Корпоративный блок */}
-          <div className="mt-20 p-12 bg-studio-accent rounded-[50px] text-white overflow-hidden relative">
-            <div className="relative z-10 max-w-2xl">
-              <h3 className="text-3xl md:text-5xl font-light mb-6">{t.pricing.corporate.title}</h3>
-              <p className="text-lg opacity-80 mb-10">{t.pricing.corporate.text}</p>
-              <Button href={WHATSAPP_LINK} target="_blank" className="!bg-white !text-studio-accent">{t.pricing.corporate.cta}</Button>
-            </div>
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-10 translate-x-1/4">
-               <Heart size={400} />
+
+          <p className="text-center text-xs italic text-studio-muted mb-16 max-w-2xl mx-auto">
+            {t.pricing.subtext}
+          </p>
+
+          {/* Аппаратная диагностика */}
+          <div className="mb-16 p-8 md:p-12 bg-studio-card border border-studio-line rounded-[40px] max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row gap-8 items-center">
+              <div className="w-16 h-16 rounded-2xl bg-studio-accent/10 flex items-center justify-center shrink-0 text-studio-accent">
+                <Sparkles size={28} />
+              </div>
+              <div>
+                <h4 className="text-xl font-serif italic mb-3">{t.pricing.diagnostic.title}</h4>
+                <p className="text-studio-muted text-sm leading-relaxed mb-4">{t.pricing.diagnostic.text}</p>
+                <p className="text-[9px] text-studio-muted opacity-50 uppercase tracking-widest max-w-2xl">{t.pricing.diagnostic.disclaimer}</p>
+              </div>
             </div>
           </div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-stretch">
+            {/* Подарочный сертификат */}
+            <div className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-studio-accent/10 flex items-center justify-center text-studio-accent mb-6">
+                  <Gift size={24} />
+                </div>
+                <h3 className="text-2xl font-serif italic mb-4">{t.pricing.certificate.title}</h3>
+                <p className="text-3xl font-serif italic text-studio-accent mb-6">{t.pricing.certificate.price}</p>
+                <p className="text-studio-muted text-sm leading-relaxed mb-10">{t.pricing.certificate.text}</p>
+              </div>
+              <Button 
+                href={WHATSAPP_LINK} 
+                target="_blank"
+                onClick={() => trackEvent('click_certificate')}
+                variant="outline"
+                className="w-full"
+              >
+                {t.pricing.certificate.cta}
+              </Button>
+            </div>
+
+            {/* 13. Корпоративный блок */}
+            <div className="p-10 bg-studio-accent rounded-[40px] text-white flex flex-col justify-between overflow-hidden relative">
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center text-white mb-6">
+                  <Heart size={24} className="fill-white" />
+                </div>
+                <h3 className="text-2xl font-light mb-4">{t.pricing.corporate.title}</h3>
+                <p className="text-white/80 text-sm leading-relaxed mb-10">{t.pricing.corporate.text}</p>
+              </div>
+              <Button 
+                href={WHATSAPP_LINK} 
+                target="_blank" 
+                onClick={() => trackEvent('click_corporate')}
+                className="!bg-white !text-studio-accent w-full"
+              >
+                {t.pricing.corporate.cta}
+              </Button>
+            </div>
+          </div>
+
         </div>
       </section>
 
-      {/* 18. Противопоказания */}
-      <section className="py-24 bg-studio-bg">
+      {/* 14. Важная рамка / дисклеймер */}
+      <section className="py-24 bg-studio-bg border-y border-studio-line">
         <div className="studio-container">
           <div className="max-w-4xl mx-auto p-12 bg-white rounded-[60px] border border-studio-line flex flex-col md:flex-row gap-12 items-center">
              <div className="w-20 h-20 rounded-full bg-studio-accent/10 flex items-center justify-center shrink-0">
                <ShieldCheck size={40} className="text-studio-accent" />
              </div>
              <div>
-               <h4 className="text-3xl font-serif italic mb-4">{t.safety.title}</h4>
+               <h4 className="text-3xl font-serif italic mb-4">{t.importantFrame.title}</h4>
                <p className="text-studio-muted leading-relaxed italic">
-                 {t.safety.text}
+                 {t.importantFrame.text}
                </p>
              </div>
           </div>
         </div>
       </section>
 
-      {/* 19. FAQ */}
-      <section id="faq" className="py-32">
-        <div className="studio-container">
-          <SectionHeading badge={t.faq.badge} title={t.faq.title} />
-          <div className="max-w-4xl mx-auto space-y-4">
-            {t.faq.items.map((item, i) => (
-              <details key={i} className="group bg-studio-card rounded-2xl border border-studio-line p-6 cursor-pointer overflow-hidden">
-                <summary className="flex justify-between items-center text-lg font-medium list-none">
-                  <span className="font-serif italic pr-4">{item.q}</span>
-                  <ChevronRight size={20} className="group-open:rotate-90 transition-transform duration-300" />
-                </summary>
-                <div className="pt-6 text-studio-muted leading-relaxed">
-                  {item.a}
-                </div>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 20. Отзывы */}
-      <section id="reviews" className="py-32 bg-white">
+      {/* 15. Отзывы */}
+      <section id="reviews" className="py-32 bg-white border-b border-studio-line">
         <div className="studio-container">
           <SectionHeading badge={t.reviews.badge} title={t.reviews.title} />
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -613,8 +842,8 @@ export default function App() {
               <div key={i} className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between">
                 <div>
                    <div className="flex gap-1 mb-6">
-                     {[...Array(5)].map((_, i) => (
-                       <Heart key={i} size={14} className="fill-studio-accent text-studio-accent" />
+                     {[...Array(5)].map((_, idx) => (
+                       <Heart key={idx} size={14} className="fill-studio-accent text-studio-accent" />
                      ))}
                    </div>
                    <p className="text-studio-ink text-sm leading-relaxed italic mb-8">"{review.text}"</p>
@@ -634,50 +863,120 @@ export default function App() {
         </div>
       </section>
 
-      {/* 21. Контакты */}
+      {/* 16. FAQ */}
+      <section id="faq" className="py-32">
+        <div className="studio-container">
+          <SectionHeading badge={t.faq.badge} title={t.faq.title} />
+          <div className="max-w-4xl mx-auto space-y-4">
+            {t.faq.items.map((item, i) => (
+              <details key={i} className="group bg-studio-card rounded-2xl border border-studio-line p-6 cursor-pointer overflow-hidden">
+                <summary className="flex justify-between items-center text-lg font-medium list-none">
+                  <span className="font-serif italic pr-4">{item.q}</span>
+                  <ChevronRight size={20} className="group-open:rotate-90 transition-transform duration-300" />
+                </summary>
+                <div className="pt-6 text-studio-muted leading-relaxed text-sm font-light">
+                  {item.a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 17. Контакты */}
       <section id="contacts" className="py-32 bg-studio-bg overflow-hidden border-t border-studio-line">
         <div className="studio-container">
           <div className="grid lg:grid-cols-2 gap-32">
             <div>
               <SectionHeading badge={t.contacts.badge} title={t.contacts.title} />
+              
               <div className="space-y-12">
                 <div className="flex gap-8">
-                  <MapPin className="text-studio-accent" size={32} />
+                  <MapPin className="text-studio-accent/80 shrink-0" size={32} />
                   <div>
                     <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.contacts.addressLabel}</div>
-                    <div className="text-2xl font-serif italic">{t.contacts.addressValue}</div>
-                    <p className="mt-2 text-studio-muted italic font-light">{t.contacts.parkingNote}</p>
+                    <div className="text-2xl font-serif italic text-studio-ink">{t.contacts.addressValue}</div>
+                    <p className="mt-2 text-studio-muted italic font-light text-xs">{t.contacts.parkingNote}</p>
                   </div>
                 </div>
+
                 <div className="flex gap-8">
-                  <Clock className="text-studio-accent" size={32} />
+                  <Clock className="text-studio-accent/80 shrink-0" size={32} />
                   <div>
                     <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.contacts.hoursLabel}</div>
-                    <div className="text-2xl font-serif italic">{t.contacts.hoursValue}</div>
-                    <p className="mt-2 text-studio-muted italic font-light">{t.contacts.bookingNote}</p>
+                    <div className="text-2xl font-serif italic text-studio-ink">{t.contacts.hoursValue}</div>
+                    <p className="mt-2 text-studio-muted italic font-light text-xs">{t.contacts.bookingNote}</p>
                   </div>
                 </div>
+
                 <div className="flex gap-8">
-                  <Phone className="text-studio-accent" size={32} />
+                  <MessageSquare className="text-studio-accent/80 shrink-0" size={32} />
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-2">{t.contacts.phoneLabel}</div>
-                    <a href="tel:+79000000000" className="text-2xl font-serif italic block hover:text-studio-accent transition-colors">+7 (900) 000-00-00</a>
-                    <a href={WHATSAPP_LINK} target="_blank" className="mt-3 text-studio-accent font-bold uppercase tracking-widest text-[10px] border-b border-studio-accent inline-block">{t.contacts.whatsappCta}</a>
+                    <div className="text-[10px] uppercase tracking-widest text-studio-muted mb-4">{t.contacts.phoneLabel} / Мессенджеры для записи</div>
+                    <a 
+                      href="tel:+79172343434" 
+                      onClick={() => trackEvent('click_phone_call')}
+                      className="text-3xl font-serif italic block hover:text-studio-accent transition-colors mb-6"
+                    >
+                      +7 (917) 234-34-34
+                    </a>
+                    
+                    {/* Кнопки вызова мессенджеров */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <a 
+                        href={WHATSAPP_LINK} 
+                        target="_blank" 
+                        onClick={() => trackEvent('click_whatsapp_contacts')}
+                        className="p-4 bg-white hover:bg-studio-accent hover:text-white transition-all text-center rounded-2xl border border-studio-line shadow-sm uppercase font-sans tracking-widest text-[9px] font-bold block"
+                      >
+                        WhatsApp
+                      </a>
+                      <a 
+                        href={TELEGRAM_LINK} 
+                        target="_blank" 
+                        onClick={() => trackEvent('click_telegram_contacts')}
+                        className="p-4 bg-white hover:bg-studio-accent hover:text-white transition-all text-center rounded-2xl border border-studio-line shadow-sm uppercase font-sans tracking-widest text-[9px] font-bold block"
+                      >
+                        Telegram
+                      </a>
+                      <a 
+                        href={VK_LINK} 
+                        target="_blank" 
+                        onClick={() => trackEvent('click_vk_contacts')}
+                        className="p-4 bg-white hover:bg-studio-accent hover:text-white transition-all text-center rounded-2xl border border-studio-line shadow-sm uppercase font-sans tracking-widest text-[9px] font-bold block"
+                      >
+                        VKontakte
+                      </a>
+                      <a 
+                        href={MAKS_LINK} 
+                        target="_blank" 
+                        onClick={() => trackEvent('click_maks_contacts')}
+                        className="p-4 bg-white hover:bg-studio-accent hover:text-white transition-all text-center rounded-2xl border border-studio-line shadow-sm uppercase font-sans tracking-widest text-[9px] font-bold block"
+                      >
+                        Maks ассистент
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="relative group grayscale-[80%] hover:grayscale-0 transition-all duration-700">
+
+            <div className="relative group grayscale-[60%] hover:grayscale-0 transition-all duration-700">
               <div className="aspect-[4/5] bg-studio-ink/10 rounded-[60px] overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=2566&auto=format&fit=crop" 
-                  alt="Map Location" 
+                  src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2670&auto=format&fit=crop" 
+                  alt="" 
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
               </div>
               <div className="absolute inset-0 bg-studio-ink/20 group-hover:bg-transparent transition-all"></div>
-              <Button href={MAP_LINK} target="_blank" className="absolute bottom-10 right-10 !bg-white !text-studio-ink shadow-2xl flex items-center gap-2">
+              <Button 
+                href={MAP_LINK} 
+                target="_blank" 
+                onClick={() => trackEvent('click_route')}
+                className="absolute bottom-10 right-10 !bg-white !text-studio-ink shadow-2xl flex items-center gap-2"
+              >
                 {t.contacts.routeCta} <ExternalLink size={14} />
               </Button>
             </div>
@@ -685,7 +984,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* 18. Footer */}
       <footer className="py-20 bg-white border-t border-studio-line">
         <div className="studio-container flex flex-col md:flex-row justify-between items-start gap-12">
           <div className="max-w-xs">
@@ -724,13 +1023,16 @@ export default function App() {
         </div>
       </footer>
 
-      {/* AI Assistant Widget Interface */}
+      {/* 19. Плавающий ИИ-ассистент */}
       <div className="fixed bottom-8 right-8 z-[60]">
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setIsAiOpen(!isAiOpen)}
-          className="w-16 h-16 rounded-full bg-studio-accent text-white shadow-2xl flex items-center justify-center hover:bg-studio-ink transition-colors relative"
+          onClick={() => {
+            trackEvent('click_ai_helper');
+            setIsAiOpen(!isAiOpen);
+          }}
+          className="w-16 h-16 rounded-full bg-studio-accent text-white shadow-2xl flex items-center justify-center hover:bg-studio-ink transition-colors relative cursor-pointer"
         >
           {isAiOpen ? <X /> : <MessageCircle />}
           {!isAiOpen && (
@@ -757,7 +1059,7 @@ export default function App() {
                      <div className="text-[10px] opacity-60 font-serif italic">{t.assistant.subtitle}</div>
                    </div>
                 </div>
-                <button onClick={() => setIsAiOpen(false)}><X size={20} /></button>
+                <button className="cursor-pointer" onClick={() => setIsAiOpen(false)}><X size={20} /></button>
               </div>
 
               {/* AI Messages */}
@@ -774,7 +1076,7 @@ export default function App() {
                     </div>
                     <div className={`p-4 rounded-2xl shadow-sm text-sm leading-relaxed whitespace-pre-wrap ${
                       msg.role === 'assistant' 
-                        ? 'bg-white rounded-tl-none font-light italic' 
+                        ? 'bg-white rounded-tl-none font-light italic text-studio-ink/90' 
                         : 'bg-studio-accent text-white rounded-tr-none'
                     }`}>
                       {msg.text || (msg.role === 'assistant' && isTyping && !msg.text ? <Loader2 size={16} className="animate-spin" /> : '')}
@@ -787,8 +1089,11 @@ export default function App() {
                     {t.assistant.chips.map((chip) => (
                       <button 
                         key={chip} 
-                        onClick={() => handleSendMessage(chip)}
-                        className="px-4 py-2 bg-white border border-studio-line rounded-full text-[10px] uppercase tracking-widest hover:border-studio-accent transition-colors shadow-sm font-bold"
+                        onClick={() => {
+                          trackEvent(`click_ai_chip_${chip}`);
+                          handleSendMessage(chip);
+                        }}
+                        className="px-4 py-2 bg-white border border-studio-line rounded-full text-[10px] uppercase tracking-widest hover:border-studio-accent transition-colors shadow-sm font-bold cursor-pointer"
                       >
                         {chip}
                       </button>
@@ -824,13 +1129,13 @@ export default function App() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder={t.assistant.inputPlaceholder} 
-                    className="flex-1 bg-studio-bg border-none rounded-full px-5 py-3 text-sm focus:ring-1 focus:ring-studio-accent font-light"
+                    className="flex-1 bg-studio-bg border-none rounded-full px-5 py-3 text-sm focus:ring-1 focus:ring-studio-accent font-light text-studio-ink outline-none"
                     disabled={isTyping}
                   />
                   <button 
                     type="submit"
                     disabled={isTyping || !inputValue.trim()}
-                    className="w-11 h-11 rounded-full bg-studio-accent text-white flex items-center justify-center disabled:opacity-50 disabled:grayscale transition-all"
+                    className="w-11 h-11 rounded-full bg-studio-accent text-white flex items-center justify-center disabled:opacity-50 disabled:grayscale transition-all cursor-pointer shrink-0"
                   >
                     {isTyping ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                   </button>
