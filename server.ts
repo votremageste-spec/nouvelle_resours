@@ -102,7 +102,14 @@ async function startServer() {
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: key });
+      const ai = new GoogleGenAI({ 
+        apiKey: key,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
       
       // Форматируем историю более надежно
       const contents = (history || []).map((item: any) => {
@@ -122,7 +129,7 @@ async function startServer() {
       contents.push({ role: 'user', parts: [{ text: message }] });
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-flash-latest",
         contents,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION + `\n\nТЕКУЩИЙ ЯЗЫК ИНТЕРФЕЙСА У ПОЛЬЗОВАТЕЛЯ: ${currentLang.toUpperCase()}. Если пользователь пишет на этом языке, обязательно отвечай на нем.`
@@ -142,7 +149,7 @@ async function startServer() {
       } else if (errorMsg.includes("403") || errorMsg.includes("401") || errorMsg.includes("API_KEY_INVALID")) {
         errorMsg = "Ошибка авторизации: ваш API ключ не принят Google. Проверьте его в настройках.";
       } else if (errorMsg.includes("404") || errorMsg.includes("NOT_FOUND")) {
-        errorMsg = "Модель не найдена (gemini-3.5-flash). Возможно, ваш ключ не поддерживает эту модель.";
+        errorMsg = "Модель не найдена (gemini-flash-latest). Возможно, ваш ключ не поддерживает эту модель.";
       }
       
       res.status(500).json({ 
