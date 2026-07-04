@@ -49,6 +49,177 @@ const trackEvent = (eventName: string, data?: any) => {
 
 // --- Components ---
 
+const LakhovskyImage = ({ t }: { t: any }) => {
+  const [srcIndex, setSrcIndex] = useState(0);
+  const possibleSrcs = [
+    "/lakhovsky.png",
+    "https://lh3.googleusercontent.com/d/1mCoIQ9Aa83720wbMT1LvEpq0B8BmY56-",
+    "https://docs.google.com/uc?export=view&id=1mCoIQ9Aa83720wbMT1LvEpq0B8BmY56-",
+    "https://drive.google.com/uc?export=view&id=1mCoIQ9Aa83720wbMT1LvEpq0B8BmY56-",
+    "/lakhovsky.jpg",
+    "/Осциллятор.jpg",
+    "/Осциллятор.png",
+    "/Осциллятор.jpeg",
+    "/Осциллятор.webp",
+    "/assets/Осциллятор.jpg",
+    "/assets/Осциллятор.png",
+    "/src/assets/Осциллятор.jpg",
+    "/src/assets/Осциллятор.png",
+    "/oscillator.jpg",
+    "/oscillator.png"
+  ];
+
+  const handleImageError = () => {
+    if (srcIndex < possibleSrcs.length) {
+      setSrcIndex(srcIndex + 1);
+    }
+  };
+
+  const currentSrc = possibleSrcs[srcIndex];
+
+  // If we are trying the Google Drive URLs and it fails, let's show a little helper.
+  // We'll also render the image or the beautiful vector SVG fallback.
+  if (srcIndex >= possibleSrcs.length) {
+    return (
+      <div className="w-full h-full bg-[#111111] flex flex-col items-center justify-center p-6 relative overflow-hidden select-none">
+        {/* Ambient background glow */}
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#CD7F32] via-transparent to-transparent animate-pulse duration-3000"></div>
+        
+        {/* The Lakhovsky MWO Antenna SVG */}
+        <div className="w-4/5 h-4/5 max-h-[280px] max-w-[280px] relative z-10 flex items-center justify-center">
+          <svg viewBox="0 0 200 200" className="w-full h-full filter drop-shadow-[0_0_20px_rgba(205,127,50,0.55)]">
+            {/* The Tripod/Stand base */}
+            <line x1="100" y1="120" x2="100" y2="185" stroke="#3A3A3A" strokeWidth="4.5" strokeLinecap="round" />
+            <line x1="100" y1="185" x2="65" y2="215" stroke="#222222" strokeWidth="4.5" strokeLinecap="round" />
+            <line x1="100" y1="185" x2="135" y2="215" stroke="#222222" strokeWidth="4.5" strokeLinecap="round" />
+            <line x1="100" y1="185" x2="100" y2="220" stroke="#1A1A1A" strokeWidth="4.5" strokeLinecap="round" />
+            
+            {/* Support structural ring */}
+            <circle cx="100" cy="100" r="85" fill="none" stroke="#2D2D2D" strokeWidth="1.5" strokeDasharray="4,4" />
+            
+            {/* Horizontal support bar */}
+            <line x1="10" y1="100" x2="190" y2="100" stroke="#333333" strokeWidth="3" strokeLinecap="round" />
+            
+            {/* Alternating concentric copper ring antennas */}
+            {/* Ring 1 (Outer - r=75) - open gap at bottom-right */}
+            <path 
+              d="M 100 25 A 75 75 0 1 1 99.9 25" 
+              fill="none" 
+              stroke="url(#copperGrad)" 
+              strokeWidth="6" 
+              strokeLinecap="round" 
+              strokeDasharray="450" 
+              strokeDashoffset="18" 
+              className="origin-center rotate-[45deg]"
+            />
+            
+            {/* Ring 2 (r=64) - open gap at top-left */}
+            <path 
+              d="M 100 36 A 64 64 0 1 1 99.9 36" 
+              fill="none" 
+              stroke="url(#bronzeGrad)" 
+              strokeWidth="5" 
+              strokeLinecap="round" 
+              strokeDasharray="380" 
+              strokeDashoffset="15" 
+              className="origin-center rotate-[225deg]"
+            />
+            
+            {/* Ring 3 (r=53) - open gap at bottom-right */}
+            <path 
+              d="M 100 47 A 53 53 0 1 1 99.9 47" 
+              fill="none" 
+              stroke="url(#copperGrad)" 
+              strokeWidth="4.2" 
+              strokeLinecap="round" 
+              strokeDasharray="320" 
+              strokeDashoffset="12" 
+              className="origin-center rotate-[45deg]"
+            />
+
+            {/* Ring 4 (r=42) - open gap at top-left */}
+            <path 
+              d="M 100 58 A 42 42 0 1 1 99.9 58" 
+              fill="none" 
+              stroke="url(#bronzeGrad)" 
+              strokeWidth="3.5" 
+              strokeLinecap="round" 
+              strokeDasharray="250" 
+              strokeDashoffset="10" 
+              className="origin-center rotate-[225deg]"
+            />
+
+            {/* Ring 5 (r=31) - open gap at bottom-right */}
+            <path 
+              d="M 100 69 A 31 31 0 1 1 99.9 69" 
+              fill="none" 
+              stroke="url(#copperGrad)" 
+              strokeWidth="2.8" 
+              strokeLinecap="round" 
+              strokeDasharray="180" 
+              strokeDashoffset="8" 
+              className="origin-center rotate-[45deg]"
+            />
+
+            {/* Ring 6 (Inner - r=20) - open gap at top-left */}
+            <path 
+              d="M 100 80 A 20 20 0 1 1 99.9 80" 
+              fill="none" 
+              stroke="url(#bronzeGrad)" 
+              strokeWidth="2.2" 
+              strokeLinecap="round" 
+              strokeDasharray="120" 
+              strokeDashoffset="6" 
+              className="origin-center rotate-[225deg]"
+            />
+
+            {/* Central glowing brass core */}
+            <circle cx="100" cy="100" r="9" fill="url(#brassGrad)" className="animate-pulse" />
+            <circle cx="100" cy="100" r="4" fill="#FFFFFF" className="opacity-90" />
+
+            {/* Gradients */}
+            <defs>
+              <linearGradient id="copperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#CD7F32" />
+                <stop offset="50%" stopColor="#E99C5D" />
+                <stop offset="100%" stopColor="#8A4A1C" />
+              </linearGradient>
+              <linearGradient id="bronzeGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#B87333" />
+                <stop offset="30%" stopColor="#E1A97A" />
+                <stop offset="70%" stopColor="#9C5425" />
+                <stop offset="100%" stopColor="#5C3114" />
+              </linearGradient>
+              <radialGradient id="brassGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#FFF4BC" />
+                <stop offset="50%" stopColor="#E7C250" />
+                <stop offset="100%" stopColor="#B28E13" />
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
+        
+        {/* Caption/Label */}
+        <div className="absolute bottom-6 left-6 right-6 text-center z-10">
+          <p className="font-serif text-[#CD7F32] text-sm italic font-light tracking-wide">{t.services.lakhovsky.title}</p>
+          <p className="text-[9px] text-white/50 uppercase tracking-[0.2em] mt-1">Схемотехника и Резонанс</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={currentSrc} 
+      alt="Lakhovsky Oscillator" 
+      onError={handleImageError}
+      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+      referrerPolicy="no-referrer"
+    />
+  );
+};
+
+
 const Button = ({ 
   children, 
   onClick, 
@@ -143,6 +314,51 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
+
+  // Calculator State
+  const [calcServices, setCalcServices] = useState<{ [key: string]: boolean }>({
+    steam_sinus: true,
+    massage: false,
+    lakhovsky: false
+  });
+
+  const calcData = {
+    steam_sinus: { price: 2000, time: 30 },
+    massage: { price: 3500, time: 60 },
+    lakhovsky: { price: 1500, time: 10 }
+  };
+
+  const totalCalcPrice = Object.entries(calcServices)
+    .reduce((sum, [key, selected]) => selected ? sum + (calcData[key as keyof typeof calcData]?.price || 0) : sum, 0);
+
+  const totalCalcTime = Object.entries(calcServices)
+    .reduce((sum, [key, selected]) => selected ? sum + (calcData[key as keyof typeof calcData]?.time || 0) : sum, 0);
+
+  const handleSendCalculatorToWhatsApp = () => {
+    trackEvent('click_calculator_send_whatsapp');
+    const selectedItems = Object.entries(calcServices)
+      .filter(([_, selected]) => selected)
+      .map(([key]) => {
+        const name = t.calculator.services[key as keyof typeof t.calculator.services];
+        const time = calcData[key as keyof typeof calcData]?.time;
+        const price = calcData[key as keyof typeof calcData]?.price;
+        return `- ${name} (${time} ${t.calculator.timeSuffix}, ${price} ₽)`;
+      });
+
+    if (selectedItems.length === 0) return;
+
+    const intro = lang === 'tt' 
+      ? "Сәламәтсезме! Мин сайтта визит конфигурациясен җыйдым:" 
+      : "Здравствуйте! Я собрал конфигурацию визита на сайте:";
+    const priceLabel = t.calculator.totalPrice;
+    const timeLabel = t.calculator.duration;
+    const ctaLabel = lang === 'tt' ? "Язылырга телим." : "Хочу записаться.";
+
+    const text = `${intro}\n${selectedItems.join('\n')}\n\n${priceLabel}: ${totalCalcPrice} ₽\n${timeLabel}: ${totalCalcTime} ${t.calculator.timeSuffix}\n\n${ctaLabel}`;
+    
+    const url = `${WHATSAPP_LINK}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
 
   // AI Chat State
   const [messages, setMessages] = useState<any[]>([
@@ -407,7 +623,7 @@ export default function App() {
             title={t.threePaths.title} 
             subtitle={t.threePaths.subtitle} 
           />
-          <div className="grid lg:grid-cols-3 gap-10">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Карточка 1: Живой Пар */}
             <div 
               onClick={() => trackEvent('click_service_steam')}
@@ -455,6 +671,28 @@ export default function App() {
                 </div>
                 <h3 className="text-2xl font-serif italic mb-6">{t.threePaths.massage.title}</h3>
                 <p className="text-studio-muted text-sm leading-relaxed font-light">{t.threePaths.massage.text}</p>
+              </div>
+              <div className="mt-10 pt-6 border-t border-studio-line flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-studio-accent">
+                <span>{t.common.learnMore}</span>
+                <ChevronRight size={14} />
+              </div>
+            </div>
+
+            {/* Карточка 4: Осциллятор Лаховского */}
+            <div 
+              onClick={() => {
+                trackEvent('click_service_lakhovsky');
+                const el = document.getElementById('lakhovsky');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between hover:border-studio-accent transition-all duration-500 cursor-pointer group"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-studio-accent/10 flex items-center justify-center text-studio-accent mb-8 group-hover:bg-studio-accent group-hover:text-white transition-colors">
+                  <Zap size={24} />
+                </div>
+                <h3 className="text-2xl font-serif italic mb-6">{t.threePaths.lakhovsky.title}</h3>
+                <p className="text-studio-muted text-sm leading-relaxed font-light">{t.threePaths.lakhovsky.text}</p>
               </div>
               <div className="mt-10 pt-6 border-t border-studio-line flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-studio-accent">
                 <span>{t.common.learnMore}</span>
@@ -602,6 +840,59 @@ export default function App() {
               >
                 {t.services.massage.cta}
               </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 8.1. Блок «Осциллятор Лаховского» */}
+      <section id="lakhovsky" className="py-24 bg-white border-b border-studio-line">
+        <div className="studio-container">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="order-2 md:order-1">
+              <div className="flex items-center gap-3 mb-6">
+                <Zap className="text-studio-accent" size={32} />
+                <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-studio-muted">Аппаратный wellness</span>
+              </div>
+              <h3 className="text-4xl md:text-5xl font-light mb-8">{t.services.lakhovsky.title}</h3>
+              <p className="text-lg font-light text-studio-muted leading-relaxed mb-8">
+                {t.services.lakhovsky.p}
+              </p>
+              
+              <div className="mb-8 p-6 bg-studio-bg rounded-3xl border border-studio-line space-y-4">
+                <h4 className="text-xs font-bold text-studio-ink uppercase tracking-wider">{t.services.lakhovsky.historyTitle}</h4>
+                <p className="text-xs font-light text-studio-muted leading-relaxed">{t.services.lakhovsky.historyText}</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-6 mb-10 p-6 bg-studio-bg rounded-3xl border border-studio-line">
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
+                  <div className="text-xs font-semibold text-studio-accent">{t.services.lakhovsky.time}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">Формат</div>
+                  <div className="text-xs font-semibold text-studio-accent capitalize">{t.services.lakhovsky.format}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">Ощущение</div>
+                  <div className="text-xs font-semibold text-studio-accent capitalize">{t.services.lakhovsky.feeling}</div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Button 
+                  variant="secondary" 
+                  href={WHATSAPP_LINK} 
+                  target="_blank"
+                  onClick={() => trackEvent('click_service_lakhovsky')}
+                >
+                  {t.services.lakhovsky.cta}
+                </Button>
+                <p className="text-[9px] text-studio-muted opacity-60 uppercase tracking-wider">{t.services.lakhovsky.disclaimer}</p>
+              </div>
+            </div>
+            <div className="order-1 md:order-2 rounded-[60px] overflow-hidden aspect-[4/3] bg-studio-ink/10 shadow-lg relative group flex items-center justify-center">
+              <LakhovskyImage t={t} />
             </div>
           </div>
         </div>
@@ -757,6 +1048,110 @@ export default function App() {
             {t.pricing.subtext}
           </p>
 
+          {/* 12.1 Интерактивный Калькулятор визита */}
+          <div className="my-24 p-8 md:p-12 bg-studio-bg border border-studio-line rounded-[40px] max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <span className="inline-block text-[10px] uppercase tracking-[0.4em] text-studio-accent font-bold mb-4">
+                {t.calculator.badge}
+              </span>
+              <h3 className="text-3xl md:text-5xl font-light mb-4 leading-tight">{t.calculator.title}</h3>
+              <p className="max-w-2xl mx-auto text-studio-muted text-sm font-light leading-relaxed">
+                {t.calculator.subtitle}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-5 gap-8 items-stretch">
+              {/* Левая колонка: Опции выбора */}
+              <div className="md:col-span-3 space-y-4">
+                {[
+                  { id: 'steam_sinus', icon: Waves },
+                  { id: 'massage', icon: Hand },
+                  { id: 'lakhovsky', icon: Zap }
+                ].map((item) => {
+                  const isSelected = calcServices[item.id];
+                  const title = t.calculator.services[item.id as keyof typeof t.calculator.services];
+                  const priceTime = t.calculator.servicePrices[item.id as keyof typeof t.calculator.servicePrices];
+                  
+                  return (
+                    <motion.div
+                      key={item.id}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      onClick={() => setCalcServices(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                      className={`p-6 rounded-3xl border-2 transition-all duration-300 cursor-pointer flex items-center justify-between group ${
+                        isSelected 
+                          ? 'bg-white border-studio-accent shadow-md' 
+                          : 'bg-white/50 border-studio-line hover:border-studio-accent/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                          isSelected ? 'bg-studio-accent text-white' : 'bg-studio-bg text-studio-muted group-hover:text-studio-accent'
+                        }`}>
+                          <item.icon size={20} />
+                        </div>
+                        <div>
+                          <div className={`font-semibold text-sm transition-colors ${isSelected ? 'text-studio-ink' : 'text-studio-ink/80'}`}>{title}</div>
+                          <div className="text-xs text-studio-muted mt-1 font-mono">{priceTime}</div>
+                        </div>
+                      </div>
+                      
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                        isSelected ? 'border-studio-accent bg-studio-accent text-white scale-110' : 'border-studio-line'
+                      }`}>
+                        {isSelected && <svg className="w-3.5 h-3.5 stroke-current" viewBox="0 0 24 24" fill="none" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Правая колонка: Итоговый расчет */}
+              <div className="md:col-span-2 bg-studio-ink text-white p-8 rounded-3xl border border-white/5 shadow-2xl flex flex-col justify-between min-h-[320px]">
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/50 mb-6 font-bold">{t.calculator.badge}</div>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-widest text-white/40 mb-2 flex items-center gap-1.5">
+                        <Clock size={12} />
+                        {t.calculator.duration}
+                      </div>
+                      <div className="text-3xl font-serif italic text-studio-accent">
+                        {totalCalcTime} <span className="text-xs uppercase tracking-widest text-white/60 font-sans font-normal">{t.calculator.timeSuffix}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/10">
+                      <div className="text-[10px] uppercase tracking-widest text-white/40 mb-2">
+                        {t.calculator.totalPrice}
+                      </div>
+                      <div className="text-4xl font-serif italic text-white">
+                        {totalCalcPrice.toLocaleString()} <span className="text-lg font-sans font-normal text-white/80">₽</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  {totalCalcPrice > 0 ? (
+                    <Button
+                      onClick={handleSendCalculatorToWhatsApp}
+                      className="w-full !bg-studio-accent hover:!bg-white hover:text-studio-ink !py-4 shadow-xl"
+                    >
+                      <Send size={14} />
+                      {t.calculator.sendWsp}
+                    </Button>
+                  ) : (
+                    <div className="p-4 bg-white/5 rounded-2xl text-center text-xs text-white/60 italic">
+                      {t.calculator.minSelect}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Аппаратная диагностика */}
           <div className="mb-16 p-8 md:p-12 bg-studio-card border border-studio-line rounded-[40px] max-w-4xl mx-auto">
             <div className="flex flex-col md:flex-row gap-8 items-center">
@@ -771,7 +1166,28 @@ export default function App() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 items-stretch">
+          <div className="grid md:grid-cols-3 gap-8 items-stretch">
+            {/* Карточка: Осциллятор Лаховского */}
+            <div className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-studio-accent/10 flex items-center justify-center text-studio-accent mb-6">
+                  <Zap size={24} />
+                </div>
+                <h3 className="text-2xl font-serif italic mb-4">{t.pricing.lakhovsky.title}</h3>
+                <p className="text-3xl font-serif italic text-studio-accent mb-6">{t.pricing.lakhovsky.price}</p>
+                <p className="text-studio-muted text-sm leading-relaxed mb-10">{t.pricing.lakhovsky.desc}</p>
+              </div>
+              <Button 
+                href={WHATSAPP_LINK} 
+                target="_blank"
+                onClick={() => trackEvent('click_pricing_lakhovsky')}
+                variant="outline"
+                className="w-full"
+              >
+                {t.pricing.lakhovsky.cta}
+              </Button>
+            </div>
+
             {/* Подарочный сертификат */}
             <div className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between">
               <div>
