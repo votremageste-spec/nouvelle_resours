@@ -626,7 +626,12 @@ export default function App() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Карточка 1: Живой Пар */}
             <div 
-              onClick={() => trackEvent('click_service_steam')}
+              onClick={() => {
+  trackEvent('click_service_steam');
+  document.getElementById('steam-details')?.scrollIntoView({
+    behavior: 'smooth',
+  });
+}}
               className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between hover:border-studio-accent transition-all duration-500 cursor-pointer group"
             >
               <div>
@@ -644,7 +649,12 @@ export default function App() {
 
             {/* Карточка 2: Синусоида */}
             <div 
-              onClick={() => trackEvent('click_service_sinusoid')}
+              onClick={() => {
+  trackEvent('click_service_sinus');
+  document.getElementById('sinus-details')?.scrollIntoView({
+    behavior: 'smooth',
+  });
+}}
               className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between hover:border-studio-accent transition-all duration-500 cursor-pointer group"
             >
               <div>
@@ -662,7 +672,12 @@ export default function App() {
 
             {/* Карточка 3: Массаж */}
             <div 
-              onClick={() => trackEvent('click_service_massage')}
+              onClick={() => {
+  trackEvent('click_service_massage');
+  document.getElementById('massage-details')?.scrollIntoView({
+    behavior: 'smooth',
+  });
+}}
               className="p-10 bg-studio-card border border-studio-line rounded-[40px] flex flex-col justify-between hover:border-studio-accent transition-all duration-500 cursor-pointer group"
             >
               <div>
@@ -704,7 +719,10 @@ export default function App() {
       </section>
 
       {/* 6. Блок «Живой Пар» */}
-      <section className="py-24 bg-studio-bg border-t border-studio-line">
+      <section
+  id="steam-details"
+  className="scroll-mt-24 py-24 bg-studio-bg border-t border-studio-line"
+>
         <div className="studio-container">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="rounded-[60px] overflow-hidden aspect-[4/3] bg-studio-ink/10 shadow-lg relative group">
@@ -756,7 +774,10 @@ export default function App() {
       </section>
 
       {/* 7. Блок «Синусоида» */}
-      <section className="py-24 bg-white border-y border-studio-line">
+      <section
+  id="sinus-details"
+  className="scroll-mt-24 py-24 bg-white border-y border-studio-line"
+>
         <div className="studio-container">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="order-2 md:order-1">
@@ -801,7 +822,10 @@ export default function App() {
       </section>
 
       {/* 8. Блок «Массаж» */}
-      <section className="py-24 bg-studio-bg border-b border-studio-line">
+      <section
+  id="massage-details"
+  className="scroll-mt-24 py-24 bg-studio-bg border-b border-studio-line"
+>
         <div className="studio-container">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="rounded-[60px] overflow-hidden aspect-[4/3] bg-studio-ink/10 shadow-lg relative group">
