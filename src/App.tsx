@@ -986,9 +986,14 @@ export default function App() {
             subtitle={t.audience.subtitle}
           />
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-8 gap-8">
             {t.audience.cards.map((card, i) => (
-              <div key={i} className="group p-10 bg-studio-card border border-studio-line rounded-[40px] hover:border-studio-accent transition-all duration-500 flex flex-col justify-between">
+              <div
+  key={i}
+  className={`group p-10 bg-studio-card border border-studio-line rounded-[40px] hover:border-studio-accent transition-all duration-500 flex flex-col justify-between lg:col-span-2 ${
+    i === 4 ? 'lg:col-start-2' : ''
+  }`}
+>
                 <div>
                   <h4 className="text-2xl font-serif mb-4 italic">{card.title}</h4>
                   <p className="text-studio-muted text-sm leading-relaxed mb-8">{card.p}</p>
