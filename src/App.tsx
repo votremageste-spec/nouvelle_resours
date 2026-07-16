@@ -924,7 +924,7 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
                 <p className="text-xs font-light text-studio-muted leading-relaxed">{t.services.lakhovsky.historyText}</p>
               </div>
 
-              <div className="grid grid-cols-3 gap-6 mb-10 p-6 bg-studio-bg rounded-3xl border border-studio-line">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-10 p-6 bg-studio-bg rounded-3xl border border-studio-line">
                 <div>
                   <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
                   <div className="text-xs font-semibold text-studio-accent">{t.services.lakhovsky.time}</div>
@@ -1122,7 +1122,7 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
           </p>
 
           {/* 12.1 Интерактивный Калькулятор визита */}
-          <div className="my-24 p-8 md:p-12 bg-studio-bg border border-studio-line rounded-[40px] max-w-5xl mx-auto">
+          <div className="my-24 p-4 sm:p-8 md:p-12 bg-studio-bg border border-studio-line rounded-[40px] max-w-5xl mx-auto"
             <div className="text-center mb-12">
               <span className="inline-block text-[10px] uppercase tracking-[0.4em] text-studio-accent font-bold mb-4">
                 {t.calculator.badge}
@@ -1135,7 +1135,7 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
 
             <div className="grid md:grid-cols-5 gap-8 items-stretch">
               {/* Левая колонка: Опции выбора */}
-              <div className="md:col-span-3 space-y-4">
+              <div className="min-w-0 md:col-span-3 space-y-4">
                 {[
                   { id: 'steam_sinus', icon: Waves },
                   { id: 'massage', icon: Hand },
@@ -1151,25 +1151,27 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
                       onClick={() => setCalcServices(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                      className={`p-6 rounded-3xl border-2 transition-all duration-300 cursor-pointer flex items-center justify-between group ${
+                      className={`w-full min-w-0 p-4 sm:p-6 rounded-3xl border-2 transition-all duration-300 cursor-pointer flex items-center justify-between gap-3 group ${
                         isSelected 
                           ? 'bg-white border-studio-accent shadow-md' 
                           : 'bg-white/50 border-studio-line hover:border-studio-accent/40'
                       }`}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                      <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                        <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
                           isSelected ? 'bg-studio-accent text-white' : 'bg-studio-bg text-studio-muted group-hover:text-studio-accent'
                         }`}>
                           <item.icon size={20} />
                         </div>
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <div className={`font-semibold text-sm transition-colors ${isSelected ? 'text-studio-ink' : 'text-studio-ink/80'}`}>{title}</div>
-                          <div className="text-xs text-studio-muted mt-1 font-mono">{priceTime}</div>
+                          <div className="text-[11px] sm:text-xs text-studio-muted mt-1 font-mono whitespace-normal break-words">
+                            {priceTime}
+                          </div>
                         </div>
                       </div>
                       
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                      <div className={`w-6 h-6 shrink-0 ml-2 rounded-full border-2 flex items-center justify-center transition-all ${
                         isSelected ? 'border-studio-accent bg-studio-accent text-white scale-110' : 'border-studio-line'
                       }`}>
                         {isSelected && <svg className="w-3.5 h-3.5 stroke-current" viewBox="0 0 24 24" fill="none" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
