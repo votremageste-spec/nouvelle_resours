@@ -451,7 +451,7 @@ export default function App() {
             <span className="font-serif text-2xl tracking-[0.2em] font-medium uppercase text-studio-ink">{t.common.title}</span>
           </div>
 
-          <div className="hidden lg:flex items-center gap-8 text-[10px] uppercase tracking-[0.25em] font-bold text-studio-muted">
+          <div className="hidden xl:flex items-center gap-8 text-[10px] uppercase tracking-[0.25em] font-bold text-studio-muted">
             <a href="#services" className="hover:text-studio-accent transition-colors">{t.nav.services}</a>
             <a href="#audience" className="hover:text-studio-accent transition-colors">{t.nav.audience}</a>
             <a href="#process" className="hover:text-studio-accent transition-colors">{t.nav.process}</a>
@@ -486,7 +486,7 @@ export default function App() {
             </Button>
           </div>
 
-          <button className="lg:hidden text-studio-ink cursor-pointer" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <button className="xl:hidden text-studio-ink cursor-pointer" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
@@ -498,7 +498,7 @@ export default function App() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-studio-bg border-b border-studio-line overflow-hidden"
+              className="xl:hidden bg-studio-bg border-b border-studio-line overflow-hidden"
             >
               <div className="flex flex-col p-8 gap-5 text-[12px] uppercase tracking-[0.3em] font-bold text-center">
                 <a href="#services" onClick={() => setMobileMenuOpen(false)}>{t.nav.services}</a>
