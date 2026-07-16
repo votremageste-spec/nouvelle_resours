@@ -1085,7 +1085,11 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
                   )}
                 </div>
                 <Button 
-                  href={WHATSAPP_LINK}
+                  href={`${WHATSAPP_LINK}?text=${encodeURIComponent(
+                    lang === 'tt'
+                      ? `Сәламәтсезме! ${item.title} форматына язылырга телим.`
+                      : `Здравствуйте! Хочу записаться: ${item.title}.`
+                  )}`}
                   target="_blank"
                   onClick={() => trackEvent(`click_pricing_${i}`)}
                   variant={item.popular ? "outline" : "secondary"}
