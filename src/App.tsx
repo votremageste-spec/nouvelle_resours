@@ -1081,7 +1081,7 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
                 item.popular ? "bg-studio-ink text-white border-studio-ink scale-105 shadow-2xl relative overflow-hidden" : "bg-studio-card border-studio-line"
               }`}>
                 {item.badge && (
-                  <span className="absolute top-6 right-6 px-3 py-1 bg-studio-accent text-white text-[9px] uppercase tracking-widest font-bold rounded-full">
+                  <span className="self-center md:self-auto md:absolute md:top-6 md:right-6 px-3 py-1 mb-4 md:mb-0 bg-studio-accent text-white text-[9px] uppercase tracking-widest font-bold rounded-full text-center leading-tight">
                     {item.badge}
                   </span>
                 )}
