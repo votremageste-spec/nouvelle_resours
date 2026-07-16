@@ -767,7 +767,7 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
               <p className="text-lg font-light text-studio-muted leading-relaxed mb-8">
                 {t.services.steam.p}
               </p>
-              <div className="grid grid-cols-3 gap-6 mb-10 p-6 bg-white rounded-3xl border border-studio-line">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-10 p-6 bg-white rounded-3xl border border-studio-line">
                 <div>
                   <div className="text-[9px] uppercase tracking-widest text-studio-muted mb-2">{t.common.timeLabel}</div>
                   <div className="text-sm font-semibold text-studio-accent">{t.services.steam.time}</div>
