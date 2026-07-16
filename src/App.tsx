@@ -1037,7 +1037,7 @@ export default function App() {
           
           <div className="grid md:grid-cols-3 gap-8 items-stretch mb-12">
             {t.pricing.items.map((item, i) => (
-              <div key={i} className={`p-10 rounded-[40px] border flex flex-col justify-between transition-all duration-500 hover:shadow-xl ${
+              <div key={i} className={`relative p-10 rounded-[40px] border flex flex-col justify-between transition-all duration-500 hover:shadow-xl ${
                 item.popular ? "bg-studio-ink text-white border-studio-ink scale-105 shadow-2xl relative overflow-hidden" : "bg-studio-card border-studio-line"
               }`}>
                 {item.badge && (
