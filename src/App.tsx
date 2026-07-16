@@ -784,7 +784,11 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
               <div className="space-y-4">
                 <Button 
                   variant="primary" 
-                  href={WHATSAPP_LINK} 
+                  href={`${WHATSAPP_LINK}?text=${encodeURIComponent(
+                    lang === 'tt'
+                      ? `Сәламәтсезме! ${t.services.steam.title} процедурасына язылырга телим.`
+                      : `Здравствуйте! Хочу записаться на процедуру «${t.services.steam.title}».`
+                  )}`} 
                   target="_blank"
                   onClick={() => trackEvent('click_service_steam')}
                 >
@@ -825,7 +829,11 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
               </div>
               <Button 
                 variant="secondary" 
-                href={WHATSAPP_LINK} 
+                href={`${WHATSAPP_LINK}?text=${encodeURIComponent(
+                  lang === 'tt'
+                    ? `Сәламәтсезме! ${t.services.sinus.title} процедурасына язылырга телим.`
+                    : `Здравствуйте! Хочу записаться на процедуру «${t.services.sinus.title}».`
+                )}`} 
                 target="_blank"
                 onClick={() => trackEvent('click_service_sinusoid')}
               >
@@ -882,7 +890,11 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
               </div>
               <Button 
                 variant="secondary" 
-                href={WHATSAPP_LINK} 
+                href={`${WHATSAPP_LINK}?text=${encodeURIComponent(
+                  lang === 'tt'
+                    ? `Сәламәтсезме! ${t.services.massage.title} процедурасына язылырга телим.`
+                    : `Здравствуйте! Хочу записаться на процедуру «${t.services.massage.title}».`
+                )}`} 
                 target="_blank"
                 onClick={() => trackEvent('click_service_massage')}
               >
@@ -930,7 +942,11 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
               <div className="space-y-4">
                 <Button 
                   variant="secondary" 
-                  href={WHATSAPP_LINK} 
+                  href={`${WHATSAPP_LINK}?text=${encodeURIComponent(
+                    lang === 'tt'
+                      ? `Сәламәтсезме! ${t.services.lakhovsky.title} процедурасына язылырга телим.`
+                      : `Здравствуйте! Хочу записаться на процедуру «${t.services.lakhovsky.title}».`
+                  )}`} 
                   target="_blank"
                   onClick={() => trackEvent('click_service_lakhovsky')}
                 >
