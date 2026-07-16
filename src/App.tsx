@@ -324,13 +324,29 @@ export default function App() {
 
   const calcData = {
     steam_sinus: { price: 2000, time: 30 },
-    massage: { price: 3500, time: 60 },
+    massage: { price: null, time: 60 },
     lakhovsky: { price: 1500, time: 10 }
   };
 
   const totalCalcPrice = Object.entries(calcServices)
     .reduce((sum, [key, selected]) => selected ? sum + (calcData[key as keyof typeof calcData]?.price || 0) : sum, 0);
 
+  const hasSelectedServices = Object.values(calcServices).some(Boolean);
+  const hasUnknownPrice = calcServices.massage;
+
+  const totalCalcPriceText =
+    totalCalcPrice > 0
+     ? hasUnknownPrice
+       ? lang === 'tt'
+         ? `${totalCalcPrice.toLocaleString()} ₽ + массаж бәясе аерым ачыклана`
+         : `${totalCalcPrice.toLocaleString()} ₽ + стоимость массажа уточняется`
+       : `${totalCalcPrice.toLocaleString()} ₽`
+    : hasUnknownPrice
+      ? lang === 'tt'
+        ? 'бәясе аерым ачыклана'
+        : 'стоимость уточняется отдельно'
+      : '0 ₽';
+  
   const totalCalcTime = Object.entries(calcServices)
     .reduce((sum, [key, selected]) => selected ? sum + (calcData[key as keyof typeof calcData]?.time || 0) : sum, 0);
 
@@ -342,7 +358,15 @@ export default function App() {
         const name = t.calculator.services[key as keyof typeof t.calculator.services];
         const time = calcData[key as keyof typeof calcData]?.time;
         const price = calcData[key as keyof typeof calcData]?.price;
-        return `- ${name} (${time} ${t.calculator.timeSuffix}, ${price} ₽)`;
+        
+        const priceText =
+  price === null
+    ? lang === 'tt'
+      ? 'бәясе аерым ачыклана'
+      : 'стоимость уточняется отдельно'
+    : `${price} ₽`;
+
+return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
       });
 
     if (selectedItems.length === 0) return;
@@ -354,7 +378,7 @@ export default function App() {
     const timeLabel = t.calculator.duration;
     const ctaLabel = lang === 'tt' ? "Язылырга телим." : "Хочу записаться.";
 
-    const text = `${intro}\n${selectedItems.join('\n')}\n\n${priceLabel}: ${totalCalcPrice} ₽\n${timeLabel}: ${totalCalcTime} ${t.calculator.timeSuffix}\n\n${ctaLabel}`;
+    const text = `${intro}\n${selectedItems.join('\n')}\n\n${priceLabel}: ${totalCalcPriceText}\n${timeLabel}: ${totalCalcTime} ${t.calculator.timeSuffix}\n\n${ctaLabel}`;
     
     const url = `${WHATSAPP_LINK}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
@@ -1155,15 +1179,15 @@ export default function App() {
                       <div className="text-[10px] uppercase tracking-widest text-white/40 mb-2">
                         {t.calculator.totalPrice}
                       </div>
-                      <div className="text-4xl font-serif italic text-white">
-                        {totalCalcPrice.toLocaleString()} <span className="text-lg font-sans font-normal text-white/80">₽</span>
+                      <div className="text-2xl md:text-3xl font-serif italic text-white leading-tight">
+                        {totalCalcPriceText}
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-8">
-                  {totalCalcPrice > 0 ? (
+                  {hasSelectedServices ? (
                     <Button
                       onClick={handleSendCalculatorToWhatsApp}
                       className="w-full !bg-studio-accent hover:!bg-white hover:text-studio-ink !py-4 shadow-xl"
