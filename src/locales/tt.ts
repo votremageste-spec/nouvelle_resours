@@ -272,7 +272,7 @@ export const tt = {
     },
     servicePrices: {
       steam_sinus: "2 000 ₽ / 30 мин",
-      massage: "3 500 ₽ / 60 мин",
+      massage: "Бәясе аерым ачыклана / 60 мин",
       lakhovsky: "1 500 ₽ / 10 мин"
     }
   },
