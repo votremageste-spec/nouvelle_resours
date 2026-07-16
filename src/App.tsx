@@ -1122,7 +1122,7 @@ return `- ${name} (${time} ${t.calculator.timeSuffix}, ${priceText})`;
           </p>
 
           {/* 12.1 Интерактивный Калькулятор визита */}
-          <div className="my-24 p-4 sm:p-8 md:p-12 bg-studio-bg border border-studio-line rounded-[40px] max-w-5xl mx-auto"
+          <div className="my-24 p-4 sm:p-8 md:p-12 bg-studio-bg border border-studio-line rounded-[40px] max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <span className="inline-block text-[10px] uppercase tracking-[0.4em] text-studio-accent font-bold mb-4">
                 {t.calculator.badge}
